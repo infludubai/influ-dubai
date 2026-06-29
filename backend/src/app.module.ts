@@ -20,6 +20,7 @@ import { BillingModule } from './billing/billing.module';
 import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
 import { FraudModule } from './fraud/fraud.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { FraudModule } from './fraud/fraud.module';
     AdminModule,
     AuditModule,
     FraudModule,
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [
