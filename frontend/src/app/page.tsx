@@ -8,9 +8,10 @@ import {
   TrendingUp, CheckCircle2, Globe, Sparkles, Play, ChevronRight, Building2,
 } from "lucide-react";
 
+const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
-  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.08, ease: [0.25, 0.46, 0.45, 0.94] } }),
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.55, delay: i * 0.08, ease: EASE } }),
 };
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 

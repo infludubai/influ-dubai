@@ -20,9 +20,10 @@ const TYPE_LABEL: Record<string, string> = {
   AWARENESS: "Awareness", ENGAGEMENT: "Engagement", LEAD_GENERATION: "Lead Gen", SALES: "Sales",
 };
 
+const EASE = [0.25, 0.46, 0.45, 0.94] as const;
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
-  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.4, delay: i * 0.07, ease: [0.25, 0.46, 0.45, 0.94] } }),
+  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.4, delay: i * 0.07, ease: EASE } }),
 };
 
 export default function BrandDashboardPage() {

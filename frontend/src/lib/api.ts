@@ -391,7 +391,7 @@ export const api = {
     }),
 
   listCreators: (params?: {
-    category?: string; location?: string; language?: string;
+    q?: string; category?: string; location?: string; language?: string;
     minFollowers?: number; maxFollowers?: number;
     minRate?: number; maxRate?: number; page?: number; limit?: number;
   }) => {

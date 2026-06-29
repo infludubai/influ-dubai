@@ -62,8 +62,8 @@ export class MessagingService {
         const otherUser = await this.prisma.user.findUnique({
           where: { id: otherId },
           select: {
-            displayName: true,
-            role: true,
+            profile: { select: { displayName: true } },
+            role: { select: { name: true } },
             creatorProfile: { select: { profileImageUrl: true } },
             brandProfile: { select: { logoUrl: true } },
           },
@@ -72,9 +72,9 @@ export class MessagingService {
           ...c,
           unread,
           otherId,
-          otherDisplayName: otherUser?.displayName ?? null,
+          otherDisplayName: otherUser?.profile?.displayName ?? null,
           otherImageUrl: otherUser?.creatorProfile?.profileImageUrl ?? otherUser?.brandProfile?.logoUrl ?? null,
-          otherRole: otherUser?.role ?? null,
+          otherRole: otherUser?.role?.name ?? null,
         };
       }),
     );
