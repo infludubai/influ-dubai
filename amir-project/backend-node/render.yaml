@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: amir-node-api
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      # Set these in Render Dashboard → Environment:
+      # DATABASE_URL      — from Supabase: Settings → Database → Connection string (Transaction mode)
+      # SUPABASE_URL      — from Supabase: Settings → API → Project URL
+      # SUPABASE_SERVICE_KEY — from Supabase: Settings → API → service_role key
+      # SUPABASE_STORAGE_BUCKET — uploads
+      # RESEND_API_KEY    — re_e8emsepV_GWcYCRTJfmC6KqwatfG87Kwc

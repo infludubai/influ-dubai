@@ -1,0 +1,21 @@
+{
+  "name": "amirnazir-node-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node API for the Amir Nazir platform — Render + Supabase.",
+  "main": "src/server.js",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "check": "node --check src/server.js && node --check src/app.js && node --check src/config/env.js && node --check src/db/postgres.js && node --check src/repositories/settingsRepository.js && node --check src/repositories/packagesRepository.js && node --check src/repositories/portfolioRepository.js && node --check src/repositories/blogRepository.js && node --check src/repositories/pagesRepository.js && node --check src/repositories/paymentMethodsRepository.js && node --check src/repositories/authRepository.js && node --check src/repositories/clientDashboardRepository.js && node --check src/repositories/checkoutRepository.js && node --check src/repositories/adminRepository.js && node --check src/services/deviceService.js && node --check src/services/mailService.js && node --check src/services/otpService.js && node --check src/routes/health.js && node --check src/routes/publicSettings.js && node --check src/routes/packages.js && node --check src/routes/portfolio.js && node --check src/routes/blog.js && node --check src/routes/pages.js && node --check src/routes/paymentMethods.js && node --check src/routes/auth.js && node --check src/routes/clientDashboard.js && node --check src/routes/checkout.js && node --check src/routes/admin.js && node --check src/routes/notifications.js && node --check src/routes/clientChats.js && node --check src/routes/contact.js && node --check src/routes/googleOauth.js && node --check src/routes/uploads.js && node --check src/utils/http.js && node --check src/utils/request.js && node --check src/utils/multipart.js && node --check src/utils/storage.js && node --check src/utils/pdf.js",
+    "parity": "node scripts/parity-check.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "nodemailer": "^8.0.10",
+    "pg": "^8.13.3"
+  }
+}

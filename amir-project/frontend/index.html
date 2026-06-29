@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Amir Nazir — Web Design, Development &amp; Digital Marketing</title>
+    <meta name="description" content="Amir Nazir offers professional web design, web development, SEO, branding, and digital marketing services. Custom websites, e-commerce stores, and digital solutions tailored to grow your business." />
+    <meta name="keywords" content="web design, web development, SEO, digital marketing, branding, e-commerce, freelance developer, Amir Nazir" />
+    <meta name="author" content="Amir Nazir" />
+    <link rel="canonical" href="https://a-mir.com/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://a-mir.com/" />
+    <meta property="og:title" content="Amir Nazir — Web Design, Development &amp; Digital Marketing" />
+    <meta property="og:description" content="Professional web design, development, SEO, and digital marketing services. Custom solutions to grow your business online." />
+    <meta property="og:image" content="https://a-mir.com/og-image.svg" />
+    <meta property="og:site_name" content="Amir Nazir" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Amir Nazir — Web Design, Development &amp; Digital Marketing" />
+    <meta name="twitter:description" content="Professional web design, development, SEO, and digital marketing services." />
+    <meta name="twitter:image" content="https://a-mir.com/og-image.svg" />
+    <script>
+      try {
+        const s = JSON.parse(localStorage.getItem('site-theme') || '{}')
+        if ((s.state && s.state.theme) === 'light') {
+          document.documentElement.classList.remove('dark')
+        } else {
+          document.documentElement.classList.add('dark')
+        }
+      } catch(e) {
+        document.documentElement.classList.add('dark')
+      }
+    </script>
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      html,body{height:100%;background:#0f172a}
+      html:not(.dark),html:not(.dark) body{background:#ffffff}
+      #splash{
+        position:fixed;inset:0;z-index:99999;
+        background:#0f172a;
+        display:flex;align-items:center;justify-content:center;
+        flex-direction:column;gap:20px;
+        transition:opacity .25s ease;
+      }
+      #splash.done{opacity:0;pointer-events:none}
+      #splash-ring{
+        width:40px;height:40px;
+        border:3px solid rgba(59,130,246,.25);
+        border-top-color:#3b82f6;
+        border-radius:50%;
+        animation:spin .75s linear infinite;
+      }
+      #splash-text{
+        font-family:system-ui,-apple-system,sans-serif;
+        font-size:13px;font-weight:600;letter-spacing:.05em;
+        color:rgba(255,255,255,.3);text-transform:uppercase;
+      }
+      @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+  </head>
+  <body>
+    <div id="splash">
+      <div id="splash-ring"></div>
+      <span id="splash-text">Loading…</span>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

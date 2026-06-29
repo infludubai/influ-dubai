@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /checkout/
+Disallow: /verify-otp
+Disallow: /onboarding
+
+Sitemap: https://a-mir.com/sitemap.xml

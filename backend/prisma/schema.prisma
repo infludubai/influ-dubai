@@ -36,8 +36,10 @@ model User {
   status        UserStatus @default(PENDING_VERIFICATION)
   roleId        String     @map("role_id")
   role          Role       @relation(fields: [roleId], references: [id])
-  profile       Profile?
-  refreshTokens RefreshToken[]
+  profile        Profile?
+  creatorProfile CreatorProfile?
+  brandProfile   BrandProfile?
+  refreshTokens  RefreshToken[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]
   createdAt     DateTime   @default(now()) @map("created_at")
@@ -128,4 +130,321 @@ model PasswordResetToken {
   createdAt DateTime @default(now()) @map("created_at")
 
   @@map("password_reset_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — Creator Profile System
+// ---------------------------------------------------------------------------
+
+enum SocialPlatform {
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  LINKEDIN
+  X
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model CreatorProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique @map("user_id")
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                String?
+  location           String?
+  languages          String[]           @default([])
+  categories         String[]           @default([])
+  minRateUsd         Float?             @map("min_rate_usd")
+  maxRateUsd         Float?             @map("max_rate_usd")
+  totalAudienceSize  Int?               @map("total_audience_size")
+  mediaKitUrl        String?            @map("media_kit_url")
+  profileImageUrl    String?            @map("profile_image_url")
+  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  // Fraud detection fields
+  fraudRiskScore     Float?             @map("fraud_risk_score")      // 0-100 (higher = riskier)
+  fraudRiskLevel     String?            @map("fraud_risk_level")      // LOW | MEDIUM | HIGH
+  fraudFlags         String[]           @default([]) @map("fraud_flags")
+  fraudAnalyzedAt    DateTime?          @map("fraud_analyzed_at")
+  socialAccounts     SocialAccount[]
+  portfolioItems     PortfolioItem[]
+  invitations        CampaignInvitation[]
+  proposals          Proposal[]
+  fraudReports       FraudReport[]
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  @@map("creator_profiles")
+}
+
+model FraudReport {
+  id               String         @id @default(uuid())
+  creatorId        String         @map("creator_id")
+  creator          CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  riskScore        Float          @map("risk_score")
+  riskLevel        String         @map("risk_level")
+  flags            String[]
+  engagementAnom   Float?         @map("engagement_anomaly")
+  followerAnom     Float?         @map("follower_anomaly")
+  summary          String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("fraud_reports")
+}
+
+model SocialAccount {
+  id             String         @id @default(uuid())
+  creatorId      String         @map("creator_id")
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform       SocialPlatform
+  handle         String
+  followersCount Int?           @map("followers_count")
+  engagementRate Float?         @map("engagement_rate")
+  profileUrl     String?        @map("profile_url")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  @@unique([creatorId, platform])
+  @@map("social_accounts")
+}
+
+model PortfolioItem {
+  id          String         @id @default(uuid())
+  creatorId   String         @map("creator_id")
+  creator     CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  mediaUrl    String?        @map("media_url")
+  linkUrl     String?        @map("link_url")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@map("portfolio_items")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Brand & Agency Workspace
+// ---------------------------------------------------------------------------
+
+enum CampaignType {
+  AWARENESS
+  ENGAGEMENT
+  LEAD_GENERATION
+  SALES
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model BrandProfile {
+  id          String     @id @default(uuid())
+  userId      String     @unique @map("user_id")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String     @map("company_name")
+  industry    String?
+  website     String?
+  logoUrl     String?    @map("logo_url")
+  description String?
+  country     String?
+  campaigns   Campaign[]
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("brand_profiles")
+}
+
+model Campaign {
+  id              String         @id @default(uuid())
+  brandId         String         @map("brand_id")
+  brand           BrandProfile   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  type            CampaignType
+  status          CampaignStatus @default(DRAFT)
+  budgetUsd       Float          @map("budget_usd")
+  targetAudience  String?        @map("target_audience")
+  targetLocations String[]       @default([]) @map("target_locations")
+  targetCategories String[]      @default([]) @map("target_categories")
+  deadline        DateTime?
+  requirements    String?
+  invitations     CampaignInvitation[]
+  proposals       Proposal[]
+  metrics         CampaignMetric[]
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("campaigns")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 8 — Analytics
+// ---------------------------------------------------------------------------
+
+model CampaignMetric {
+  id                  String   @id @default(uuid())
+  campaignId          String   @map("campaign_id")
+  campaign            Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  reach               Int      @default(0)
+  impressions         Int      @default(0)
+  engagement          Int      @default(0)
+  clicks              Int      @default(0)
+  conversions         Int      @default(0)
+  costPerEngagement   Float?   @map("cost_per_engagement")
+  roiEstimate         Float?   @map("roi_estimate")
+  recordedAt          DateTime @default(now()) @map("recorded_at")
+
+  @@map("campaign_metrics")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — Campaign Collaboration System
+// ---------------------------------------------------------------------------
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model CampaignInvitation {
+  id          String           @id @default(uuid())
+  campaignId  String           @map("campaign_id")
+  campaign    Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId   String           @map("creator_id")
+  creator     CreatorProfile   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  status      InvitationStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@unique([campaignId, creatorId])
+  @@map("campaign_invitations")
+}
+
+model Proposal {
+  id           String         @id @default(uuid())
+  campaignId   String         @map("campaign_id")
+  campaign     Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId    String         @map("creator_id")
+  creator      CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  coverLetter  String         @map("cover_letter")
+  proposedRate Float?         @map("proposed_rate")
+  status       ProposalStatus @default(PENDING)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@unique([campaignId, creatorId])
+  @@map("proposals")
+}
+
+model Conversation {
+  id           String    @id @default(uuid())
+  participant1 String    @map("participant1_id")
+  participant2 String    @map("participant2_id")
+  messages     Message[]
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([participant1, participant2])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String       @map("sender_id")
+  content        String
+  readAt         DateTime?    @map("read_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 12 — Subscription & Monetization
+// ---------------------------------------------------------------------------
+
+enum PlanTier {
+  FREE
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String             @unique @map("user_id")
+  plan                 PlanTier           @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  stripeSubscriptionId String?            @map("stripe_subscription_id")
+  currentPeriodEnd     DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  invoices             Invoice[]
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id               String       @id @default(uuid())
+  subscriptionId   String       @map("subscription_id")
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripeInvoiceId  String?      @unique @map("stripe_invoice_id")
+  amountUsd        Float        @map("amount_usd")
+  status           String       // paid | open | void
+  pdfUrl           String?      @map("pdf_url")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  @@map("invoices")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  resource  String
+  resourceId String? @map("resource_id")
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
 }

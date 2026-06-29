@@ -1,0 +1,57 @@
+name: CI
+
+# Vercel handles frontend deploys automatically from GitHub.
+# Railway handles backend-node deploys automatically from GitHub.
+# This workflow only runs a quick sanity check on PRs / pushes.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  check-frontend:
+    name: Frontend Build Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Type check + build
+        working-directory: frontend
+        env:
+          VITE_API_URL: https://api.a-mir.com/api
+          VITE_STORAGE_URL: https://api.a-mir.com
+        run: npm run build
+
+  check-node-backend:
+    name: Node Backend Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend-node/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend-node
+        run: npm ci
+
+      - name: Syntax check
+        working-directory: backend-node
+        run: npm run check

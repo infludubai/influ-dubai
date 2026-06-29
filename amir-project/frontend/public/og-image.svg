@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#6366f1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="1050" cy="120" r="200" fill="#3b82f6" opacity="0.06"/>
+  <circle cx="150" cy="520" r="160" fill="#6366f1" opacity="0.06"/>
+
+  <!-- Accent bar -->
+  <rect x="80" y="240" width="6" height="150" rx="3" fill="url(#accent)"/>
+
+  <!-- Name -->
+  <text x="112" y="295" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="800" fill="#ffffff" letter-spacing="-2">Amir Nazir</text>
+
+  <!-- Tagline -->
+  <text x="112" y="355" font-family="system-ui, -apple-system, sans-serif" font-size="30" font-weight="400" fill="#94a3b8">Web Design · Development · Digital Marketing</text>
+
+  <!-- Services pills -->
+  <rect x="112" y="390" width="156" height="40" rx="20" fill="#3b82f6" opacity="0.2"/>
+  <text x="190" y="415" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#60a5fa" text-anchor="middle">Web Design</text>
+
+  <rect x="280" y="390" width="160" height="40" rx="20" fill="#6366f1" opacity="0.2"/>
+  <text x="360" y="415" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#a5b4fc" text-anchor="middle">Development</text>
+
+  <rect x="452" y="390" width="100" height="40" rx="20" fill="#10b981" opacity="0.2"/>
+  <text x="502" y="415" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#6ee7b7" text-anchor="middle">SEO</text>
+
+  <rect x="564" y="390" width="180" height="40" rx="20" fill="#f59e0b" opacity="0.2"/>
+  <text x="654" y="415" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#fcd34d" text-anchor="middle">Digital Marketing</text>
+
+  <!-- Domain -->
+  <text x="112" y="550" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="500" fill="#475569">a-mir.com</text>
+</svg>
