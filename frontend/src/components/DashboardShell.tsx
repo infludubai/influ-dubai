@@ -194,7 +194,7 @@ export function DashboardShell({
   );
 
   return (
-    <div className="flex min-h-screen bg-muted/20">
+    <div className="flex min-h-screen bg-gray-50">
       {/* Desktop sidebar */}
       <aside className={`relative hidden flex-col border-r bg-sidebar transition-all duration-300 lg:flex ${collapsed ? "w-[72px]" : "w-[256px]"}`}>
         <SidebarContent />

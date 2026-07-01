@@ -1,24 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
 import {
   ArrowRight, Search, BarChart3, ShieldCheck, Users,
-  Sparkles, ChevronRight, Globe, Zap, CheckCircle2,
-  TrendingUp, Star, MessageSquare,
+  Sparkles, Zap, CheckCircle2, Star, MessageSquare,
+  TrendingUp, Globe, ChevronRight,
 } from "lucide-react";
 
-const EASE = [0.25, 0.46, 0.45, 0.94] as const;
+/* ── tiny helpers ── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
-  visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.5, delay: i * 0.07, ease: EASE } }),
+  hidden: { opacity: 0, y: 24 },
+  visible: (i = 0) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.55, delay: i * 0.08, ease: [0.25, 0.46, 0.45, 0.94] as [number,number,number,number] },
+  }),
 };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 
-function Section({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function FadeSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "-60px" });
   return (
     <motion.div ref={ref} initial="hidden" animate={inView ? "visible" : "hidden"} variants={stagger} className={className}>
       {children}
@@ -26,174 +29,123 @@ function Section({ children, className = "" }: { children: React.ReactNode; clas
   );
 }
 
+/* ── data ── */
 const STATS = [
   { value: "12,000+", label: "Verified Creators" },
-  { value: "850+", label: "Active Brands" },
-  { value: "3,200+", label: "Campaigns Launched" },
-  { value: "AED 40M+", label: "Creator Earnings" },
+  { value: "850+",    label: "Active Brands" },
+  { value: "3,200+",  label: "Campaigns Launched" },
+  { value: "AED 40M+",label: "Creator Earnings" },
 ];
 
 const FEATURES = [
-  {
-    icon: Search,
-    color: "bg-violet-50 text-violet-600",
-    title: "Creator Discovery",
-    desc: "Search 12,000+ verified UAE & MENA creators by niche, location, follower count, and engagement rate with powerful filters.",
-  },
-  {
-    icon: Users,
-    color: "bg-blue-50 text-blue-600",
-    title: "AI Matching Engine",
-    desc: "Our GPT-4o matching engine recommends the most relevant creators for every campaign based on 20+ audience and content signals.",
-  },
-  {
-    icon: ShieldCheck,
-    color: "bg-emerald-50 text-emerald-600",
-    title: "Fraud Detection",
-    desc: "Automatically flag fake followers, bot engagement, and suspicious growth patterns before you commit your budget.",
-  },
-  {
-    icon: BarChart3,
-    color: "bg-orange-50 text-orange-600",
-    title: "Campaign Analytics",
-    desc: "Real-time dashboards tracking reach, engagement, conversions, and ROI. Predict results before you launch.",
-  },
-  {
-    icon: MessageSquare,
-    color: "bg-pink-50 text-pink-600",
-    title: "Built-in Collaboration",
-    desc: "Invite creators, review proposals, negotiate rates, and manage deliverables — all in one workspace.",
-  },
-  {
-    icon: Globe,
-    color: "bg-teal-50 text-teal-600",
-    title: "MENA-First Platform",
-    desc: "Built for UAE, Saudi Arabia, Egypt and the broader MENA market. Arabic-ready with local market intelligence.",
-  },
+  { icon: Search,       color: "bg-violet-100 text-violet-600", title: "Creator Discovery",      desc: "Search 12,000+ verified UAE & MENA creators by niche, location, followers, and engagement rate." },
+  { icon: Users,        color: "bg-blue-100 text-blue-600",     title: "AI Matching Engine",     desc: "GPT-4o powered matching recommends the most relevant creators for every campaign brief." },
+  { icon: ShieldCheck,  color: "bg-emerald-100 text-emerald-600",title:"Fraud Detection",        desc: "Flag fake followers, bot engagement, and suspicious growth patterns before you spend." },
+  { icon: BarChart3,    color: "bg-orange-100 text-orange-600", title: "Campaign Analytics",     desc: "Real-time dashboards tracking reach, engagement, conversions, and predicted ROI." },
+  { icon: MessageSquare,color: "bg-pink-100 text-pink-600",     title: "Built-in Collaboration", desc: "Proposals, contracts, messaging and deliverable management all in one place." },
+  { icon: Globe,        color: "bg-teal-100 text-teal-600",     title: "MENA-First Platform",    desc: "Built for UAE, KSA, Egypt and broader MENA. Arabic-ready with local market intelligence." },
 ];
 
 const STEPS = [
-  {
-    n: "1",
-    title: "Create your profile",
-    desc: "Brands set campaign goals. Creators add their niche, rates, and link social accounts in minutes.",
-  },
-  {
-    n: "2",
-    title: "AI finds the right match",
-    desc: "Our matching engine scores and ranks creators against your campaign brief using 20+ signals.",
-  },
-  {
-    n: "3",
-    title: "Collaborate and grow",
-    desc: "Proposals, contracts, messaging, and live performance tracking — handled inside the platform.",
-  },
+  { n: "01", title: "Create your profile",       desc: "Brands set campaign goals. Creators add niche, rates and link socials in minutes." },
+  { n: "02", title: "AI finds the right match",  desc: "Our engine scores and ranks creators against your brief using 20+ signals." },
+  { n: "03", title: "Collaborate and grow",       desc: "Proposals, live performance tracking and payments — all inside the platform." },
 ];
 
 const TESTIMONIALS = [
-  {
-    quote: "InfluDubai AI cut our influencer sourcing time by 70%. The fraud detection alone saved us from a costly mistake.",
-    name: "Sarah Al-Mansoori",
-    role: "CMO, Noon.com",
-    initials: "SA",
-    color: "bg-violet-100 text-violet-700",
-  },
-  {
-    quote: "We found three incredible UAE lifestyle creators in 20 minutes. The AI matching is genuinely impressive.",
-    name: "Ahmed Khalil",
-    role: "Marketing Director, Careem",
-    initials: "AK",
-    color: "bg-blue-100 text-blue-700",
-  },
-  {
-    quote: "The analytics dashboard helped me understand my audience better and confidently raise my rates by 40%.",
-    name: "Layla Hassan",
-    role: "Fashion Creator, Dubai",
-    initials: "LH",
-    color: "bg-emerald-100 text-emerald-700",
-  },
+  { quote: "InfluDubai AI cut our influencer sourcing time by 70%. The fraud detection alone saved us from a costly mistake.", name: "Sarah Al-Mansoori", role: "CMO, Noon.com",          initials: "SA", color: "bg-violet-100 text-violet-700" },
+  { quote: "We found three incredible UAE lifestyle creators in 20 minutes. The AI matching is genuinely impressive.",        name: "Ahmed Khalil",       role: "Marketing Dir., Careem",  initials: "AK", color: "bg-blue-100 text-blue-700" },
+  { quote: "The analytics dashboard helped me understand my audience better and raise my rates confidently by 40%.",          name: "Layla Hassan",       role: "Fashion Creator, Dubai",  initials: "LH", color: "bg-emerald-100 text-emerald-700" },
 ];
 
-const CATEGORIES = ["Beauty", "Fashion", "Fitness", "Food & Drink", "Tech", "Travel", "Gaming", "Finance", "Lifestyle", "Luxury"];
+const BRANDS = ["Noon","Emirates","Majid Al Futtaim","Talabat","Careem","ADNOC","Emaar","Etisalat"];
+const CATEGORIES = ["Beauty","Fashion","Fitness","Food & Drink","Tech","Travel","Gaming","Finance","Lifestyle","Luxury"];
 
+/* ── component ── */
 export default function HomePage() {
-  return (
-    <div className="flex min-h-screen flex-col bg-white overflow-x-hidden">
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const fn = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
+  }, []);
 
-      {/* ── Navbar ── */}
-      <header className="sticky top-0 z-50 border-b border-zinc-100 bg-white/90 backdrop-blur-xl">
+  return (
+    <div className="flex min-h-screen flex-col overflow-x-hidden">
+
+      {/* ══ Navbar ══ */}
+      <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled ? "bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100" : "bg-transparent"
+      }`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-brand shadow-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-brand shadow">
               <Sparkles className="h-4 w-4 text-white" />
             </div>
-            <span className="text-[15px] font-bold tracking-tight text-zinc-900">
-              InfluDubai <span className="gradient-text">AI</span>
+            <span className={`text-[15px] font-bold tracking-tight transition-colors ${scrolled ? "text-gray-900" : "text-white"}`}>
+              InfluDubai <span className={scrolled ? "gradient-text" : "text-violet-400"}>AI</span>
             </span>
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
-            {[
-              { href: "/marketplace", label: "Marketplace" },
-              { href: "/pricing", label: "Pricing" },
-            ].map(({ href, label }) => (
+            {[{ href: "/marketplace", label: "Marketplace" }, { href: "/pricing", label: "Pricing" }].map(({ href, label }) => (
               <Link key={href} href={href}
-                className="rounded-lg px-3.5 py-1.5 text-sm font-medium text-zinc-500 transition-colors hover:bg-zinc-50 hover:text-zinc-900">
-                {label}
-              </Link>
+                className={`rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors ${
+                  scrolled ? "text-gray-500 hover:text-gray-900 hover:bg-gray-50" : "text-white/70 hover:text-white hover:bg-white/10"
+                }`}>{label}</Link>
             ))}
           </nav>
 
           <div className="flex items-center gap-2">
             <Link href="/login">
-              <button className="rounded-lg px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-50 hover:text-zinc-900">
-                Sign in
-              </button>
+              <button className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                scrolled ? "text-gray-600 hover:bg-gray-50" : "text-white/80 hover:text-white hover:bg-white/10"
+              }`}>Sign in</button>
             </Link>
             <Link href="/register">
-              <button className="btn-primary rounded-lg px-4 py-2 text-sm">
-                Get started free
-              </button>
+              <button className="btn-primary text-sm py-2 px-5">Get started free</button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-hero pt-16 pb-16">
-        <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-50" />
+      {/* ══ Hero — dark like a-mir.com ══ */}
+      <section className="relative flex min-h-screen items-center justify-center bg-hero-dark overflow-hidden">
+        {/* Background glow blobs */}
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-64 top-0 h-[600px] w-[600px] rounded-full bg-violet-400/8 blur-3xl" />
-          <div className="absolute -right-32 bottom-0 h-[400px] w-[400px] rounded-full bg-purple-400/6 blur-3xl" />
+          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-violet-600/20 blur-[120px]" />
+          <div className="absolute bottom-0 right-0 h-[400px] w-[400px] rounded-full bg-blue-600/10 blur-[100px]" />
         </div>
 
-        <div className="container relative z-10 mx-auto max-w-5xl px-6 text-center">
+        <div className="relative z-10 mx-auto max-w-5xl px-6 text-center pt-24">
+          {/* Label badge */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-6 inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-4 py-1.5 text-sm font-medium text-violet-700"
+            className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-1.5 text-sm font-medium text-white/80 backdrop-blur-sm"
           >
-            <Zap className="h-3.5 w-3.5" />
+            <Zap className="h-3.5 w-3.5 text-violet-400" />
             UAE &amp; MENA Creator Intelligence Platform
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </motion.div>
 
+          {/* Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="mb-6 text-5xl font-bold leading-[1.08] tracking-tight text-zinc-900 sm:text-6xl lg:text-7xl text-balance"
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mb-6 text-5xl font-bold leading-[1.06] text-white sm:text-6xl lg:text-7xl text-balance"
           >
-            Find the right creators.{" "}
+            Discover. Match.{" "}
+            <br className="hidden sm:block" />
             <span className="gradient-text">Run campaigns<br className="hidden sm:block" /> that perform.</span>
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-zinc-500"
+            transition={{ duration: 0.5, delay: 0.18 }}
+            className="mx-auto mb-10 max-w-2xl text-lg leading-relaxed text-white/55"
           >
             AI-powered creator discovery, fraud detection and performance analytics
             for brands and agencies across the UAE and MENA.
@@ -202,46 +154,66 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.22 }}
+            transition={{ duration: 0.45, delay: 0.25 }}
             className="flex flex-col items-center justify-center gap-3 sm:flex-row"
           >
             <Link href="/register?role=BRAND">
-              <button className="btn-primary flex items-center gap-2 rounded-xl px-7 py-3.5 text-base">
-                Start as a Brand <ArrowRight className="h-4 w-4" />
+              <button className="btn-primary text-base py-3 px-8">
+                View Packages <ArrowRight className="h-4 w-4" />
               </button>
             </Link>
-            <Link href="/register?role=CREATOR">
-              <button className="btn-secondary flex items-center gap-2 rounded-xl px-7 py-3.5 text-base">
-                Join as Creator
+            <Link href="/marketplace">
+              <button className="btn-secondary text-base py-3 px-8">
+                Browse Creators
               </button>
             </Link>
           </motion.div>
 
-          {/* Stats */}
+          {/* Stats row */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 max-w-2xl mx-auto"
+            transition={{ duration: 0.5, delay: 0.35 }}
+            className="mt-20 grid grid-cols-2 gap-px sm:grid-cols-4 border border-white/10 rounded-2xl overflow-hidden"
           >
             {STATS.map((s) => (
-              <div key={s.label} className="rounded-2xl border border-zinc-100 bg-white px-4 py-5 text-center shadow-sm">
-                <p className="text-2xl font-bold gradient-text">{s.value}</p>
-                <p className="mt-1 text-xs font-medium text-zinc-500">{s.label}</p>
+              <div key={s.label} className="bg-white/5 backdrop-blur-sm px-6 py-6 text-center">
+                <p className="text-3xl font-bold text-white">{s.value}</p>
+                <p className="mt-1 text-xs font-medium text-white/45">{s.label}</p>
               </div>
             ))}
           </motion.div>
         </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/30">
+          <div className="h-10 w-px bg-gradient-to-b from-white/30 to-transparent" />
+          <span className="text-[10px] tracking-widest uppercase">scroll</span>
+        </div>
       </section>
 
-      {/* ── Category chips ── */}
-      <section className="border-b border-t border-zinc-100 bg-zinc-50/70 py-4">
+      {/* ══ Brand trust bar ══ */}
+      <section className="border-b border-gray-100 bg-white py-6">
+        <div className="mx-auto max-w-6xl px-6">
+          <p className="mb-5 text-center text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+            Trusted by leading brands across UAE &amp; MENA
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+            {BRANDS.map((b) => (
+              <span key={b} className="text-sm font-bold tracking-wide text-gray-300 hover:text-gray-500 transition-colors">{b}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══ Category chips ══ */}
+      <section className="border-b border-gray-100 bg-gray-50 py-4">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-zinc-400 mr-1">Browse</span>
+            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-widest text-gray-400 mr-1">Browse</span>
             {CATEGORIES.map((c) => (
               <Link key={c} href={`/marketplace?category=${c}`}>
-                <span className="cursor-pointer rounded-full border border-zinc-200 bg-white px-3.5 py-1 text-xs font-medium text-zinc-600 shadow-sm transition-all hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700">
+                <span className="cursor-pointer rounded-full border border-gray-200 bg-white px-3.5 py-1 text-xs font-medium text-gray-600 shadow-sm transition-all hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700">
                   {c}
                 </span>
               </Link>
@@ -250,186 +222,162 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto max-w-7xl px-6">
-          <Section className="mb-10 text-center">
+      {/* ══ Features ══ */}
+      <section className="py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-6">
+          <FadeSection className="mb-14 text-center">
             <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-600">
               Platform capabilities
             </motion.p>
-            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-zinc-900">
+            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-gray-900 sm:text-5xl">
               Everything you need to run<br className="hidden sm:block" /> creator campaigns
             </motion.h2>
-            <motion.p variants={fadeUp} custom={2} className="mx-auto mt-4 max-w-lg text-lg text-zinc-500">
+            <motion.p variants={fadeUp} custom={2} className="mx-auto mt-4 max-w-lg text-lg text-gray-500">
               From discovery to payment — one unified platform built for UAE and MENA.
             </motion.p>
-          </Section>
+          </FadeSection>
 
-          <Section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <FadeSection className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
               <motion.div key={f.title} variants={fadeUp} custom={i}
-                className="group rounded-2xl border border-zinc-100 bg-white p-7 transition-all duration-200 hover:-translate-y-1 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-100/50"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)" }}
+                className="group rounded-2xl border border-gray-100 bg-white p-7 transition-all duration-200 hover:-translate-y-1 hover:border-violet-200 hover:shadow-xl hover:shadow-violet-100/40"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
               >
-                <div className={`mb-5 flex h-11 w-11 items-center justify-center rounded-xl ${f.color} transition-transform group-hover:scale-110`}>
+                <div className={`mb-5 icon-badge ${f.color} transition-transform group-hover:scale-110`}>
                   <f.icon className="h-5 w-5" />
                 </div>
-                <h3 className="mb-2 text-base font-semibold text-zinc-900">{f.title}</h3>
-                <p className="text-sm leading-relaxed text-zinc-500">{f.desc}</p>
-                <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-violet-600 opacity-0 transition-opacity group-hover:opacity-100">
+                <h3 className="mb-2 text-[15px] font-semibold text-gray-900">{f.title}</h3>
+                <p className="text-sm leading-relaxed text-gray-500">{f.desc}</p>
+                <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-violet-600 opacity-0 transition-opacity group-hover:opacity-100">
                   Learn more <ChevronRight className="h-3.5 w-3.5" />
                 </div>
               </motion.div>
             ))}
-          </Section>
+          </FadeSection>
         </div>
       </section>
 
-      {/* ── How it works ── */}
-      <section className="py-16 bg-zinc-50">
-        <div className="container mx-auto max-w-7xl px-6">
-          <Section className="mb-10 text-center">
-            <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-600">
+      {/* ══ How it works — dark bg like a-mir.com CTA ══ */}
+      <section className="py-20 bg-gray-950">
+        <div className="mx-auto max-w-7xl px-6">
+          <FadeSection className="mb-14 text-center">
+            <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-400">
               Simple by design
             </motion.p>
-            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-zinc-900">
+            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-white sm:text-5xl">
               From brief to results in 3 steps
             </motion.h2>
-          </Section>
+          </FadeSection>
 
-          <Section className="relative grid gap-6 sm:grid-cols-3">
-            {/* Connector line */}
-            <div className="absolute left-0 right-0 top-12 mx-auto hidden h-px max-w-lg bg-gradient-to-r from-transparent via-violet-200 to-transparent sm:block" />
-
+          <FadeSection className="grid gap-6 sm:grid-cols-3">
             {STEPS.map((s, i) => (
               <motion.div key={s.n} variants={fadeUp} custom={i}
-                className="relative rounded-2xl border border-zinc-100 bg-white p-8 text-center"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+                className="relative rounded-2xl border border-white/8 bg-white/5 p-8 backdrop-blur-sm"
               >
-                <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full gradient-brand text-white text-lg font-bold shadow-md shadow-violet-300/30">
-                  {s.n}
-                </div>
-                <h3 className="mb-2.5 text-lg font-semibold text-zinc-900">{s.title}</h3>
-                <p className="text-sm leading-relaxed text-zinc-500">{s.desc}</p>
+                <p className="mb-4 text-5xl font-bold text-white/10">{s.n}</p>
+                <h3 className="mb-2.5 text-lg font-semibold text-white">{s.title}</h3>
+                <p className="text-sm leading-relaxed text-white/50">{s.desc}</p>
               </motion.div>
             ))}
-          </Section>
+          </FadeSection>
         </div>
       </section>
 
-      {/* ── Social proof ── */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto max-w-7xl px-6">
-          <Section className="mb-10 text-center">
+      {/* ══ Testimonials ══ */}
+      <section className="py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-6">
+          <FadeSection className="mb-14 text-center">
             <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-600">
               Trusted by leaders
             </motion.p>
-            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-zinc-900">
+            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-gray-900 sm:text-5xl">
               What our customers say
             </motion.h2>
-          </Section>
+          </FadeSection>
 
-          <Section className="grid gap-5 sm:grid-cols-3">
+          <FadeSection className="grid gap-5 sm:grid-cols-3">
             {TESTIMONIALS.map((t, i) => (
               <motion.div key={t.name} variants={fadeUp} custom={i}
-                className="rounded-2xl border border-zinc-100 bg-white p-7"
-                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03)" }}
+                className="rounded-2xl border border-gray-100 bg-white p-7"
+                style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
               >
                 <div className="mb-4 flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
                   ))}
                 </div>
-                <p className="text-sm leading-relaxed text-zinc-600">"{t.quote}"</p>
+                <p className="text-sm leading-relaxed text-gray-600">"{t.quote}"</p>
                 <div className="mt-6 flex items-center gap-3">
                   <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold ${t.color}`}>
                     {t.initials}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-zinc-900">{t.name}</p>
-                    <p className="text-xs text-zinc-500">{t.role}</p>
+                    <p className="text-sm font-semibold text-gray-900">{t.name}</p>
+                    <p className="text-xs text-gray-500">{t.role}</p>
                   </div>
                 </div>
               </motion.div>
             ))}
-          </Section>
+          </FadeSection>
         </div>
       </section>
 
-      {/* ── Brand trust bar ── */}
-      <section className="border-t border-b border-zinc-100 bg-zinc-50/80 py-10">
-        <div className="container mx-auto max-w-5xl px-6 text-center">
-          <p className="mb-7 text-xs font-semibold uppercase tracking-widest text-zinc-400">
-            Trusted by leading brands across UAE &amp; MENA
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {["Noon", "Emirates", "Majid Al Futtaim", "Talabat", "Careem", "ADNOC", "Emaar", "Etisalat"].map((b) => (
-              <span key={b} className="text-sm font-bold tracking-wide text-zinc-300 transition-colors hover:text-zinc-500">{b}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="relative overflow-hidden bg-auth-gradient py-16">
-        <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-10" />
+      {/* ══ CTA — purple-to-blue gradient like a-mir.com ══ */}
+      <section className="relative overflow-hidden bg-cta-gradient py-20">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -right-32 -top-32 h-[500px] w-[500px] rounded-full bg-white/5 blur-3xl" />
           <div className="absolute -bottom-32 -left-32 h-[500px] w-[500px] rounded-full bg-white/5 blur-3xl" />
         </div>
-
-        <div className="container relative z-10 mx-auto max-w-3xl px-6 text-center">
-          <Section>
-            <motion.div variants={fadeUp}
-              className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white/85">
-              <Sparkles className="h-3.5 w-3.5" /> Ready to grow with AI?
-            </motion.div>
-            <motion.h2 variants={fadeUp} custom={1} className="mt-4 text-4xl font-bold text-white text-balance leading-tight">
-              Join 12,000+ creators and 850+ brands<br className="hidden sm:block" /> running smarter campaigns.
+        <div className="relative z-10 mx-auto max-w-3xl px-6 text-center">
+          <FadeSection>
+            <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-white/60">
+              Ready to grow?
+            </motion.p>
+            <motion.h2 variants={fadeUp} custom={1} className="text-4xl font-bold text-white sm:text-5xl text-balance">
+              Join 12,000+ creators and 850+ brands running smarter campaigns.
             </motion.h2>
             <motion.p variants={fadeUp} custom={2} className="mx-auto mt-4 max-w-md text-lg text-white/60">
               Start free. No credit card required.
             </motion.p>
             <motion.div variants={fadeUp} custom={3} className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/register">
-                <button className="flex items-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-semibold text-violet-700 shadow-xl transition-all hover:-translate-y-0.5 hover:bg-white/95 hover:shadow-2xl">
+                <button className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-base font-semibold text-violet-700 shadow-xl transition-all hover:-translate-y-0.5 hover:shadow-2xl">
                   Get started free <ArrowRight className="h-4 w-4" />
                 </button>
               </Link>
               <Link href="/marketplace">
-                <button className="flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-8 py-3.5 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/15">
+                <button className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-8 py-3.5 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/18">
                   Browse creators
                 </button>
               </Link>
             </motion.div>
-          </Section>
+          </FadeSection>
         </div>
       </section>
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-zinc-100 bg-white px-6 py-16">
-        <div className="container mx-auto max-w-7xl grid gap-10 sm:grid-cols-4">
+      {/* ══ Footer ══ */}
+      <footer className="border-t border-gray-100 bg-white px-6 py-16">
+        <div className="mx-auto max-w-7xl grid gap-10 sm:grid-cols-4">
           <div>
             <Link href="/" className="mb-4 flex items-center gap-2">
               <div className="flex h-7 w-7 items-center justify-center rounded-lg gradient-brand">
                 <Sparkles className="h-3.5 w-3.5 text-white" />
               </div>
-              <span className="text-base font-bold text-zinc-900">InfluDubai <span className="gradient-text">AI</span></span>
+              <span className="text-base font-bold text-gray-900">InfluDubai <span className="gradient-text">AI</span></span>
             </Link>
-            <p className="text-sm text-zinc-500 leading-relaxed">Creator intelligence for the UAE &amp; MENA region.</p>
-            <p className="mt-5 text-xs text-zinc-400">© 2025 InfluDubai AI. All rights reserved.</p>
+            <p className="text-sm text-gray-500 leading-relaxed">Creator intelligence for the UAE &amp; MENA region.</p>
+            <p className="mt-5 text-xs text-gray-400">© 2025 InfluDubai AI. All rights reserved.</p>
           </div>
-
           {[
             { heading: "Platform", links: [{ l: "Marketplace", h: "/marketplace" }, { l: "For Creators", h: "/register?role=CREATOR" }, { l: "For Brands", h: "/register?role=BRAND" }, { l: "Pricing", h: "/pricing" }] },
             { heading: "Company",  links: [{ l: "About", h: "#" }, { l: "Blog", h: "#" }, { l: "Careers", h: "#" }, { l: "Contact", h: "#" }] },
             { heading: "Legal",    links: [{ l: "Privacy Policy", h: "#" }, { l: "Terms of Service", h: "#" }, { l: "Cookie Policy", h: "#" }] },
           ].map((col) => (
             <div key={col.heading}>
-              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-zinc-400">{col.heading}</p>
+              <p className="mb-4 text-xs font-semibold uppercase tracking-widest text-gray-400">{col.heading}</p>
               <div className="space-y-3">
                 {col.links.map((l) => (
-                  <Link key={l.l} href={l.h} className="block text-sm text-zinc-500 transition-colors hover:text-zinc-900">{l.l}</Link>
+                  <Link key={l.l} href={l.h} className="block text-sm text-gray-500 transition-colors hover:text-gray-900">{l.l}</Link>
                 ))}
               </div>
             </div>
