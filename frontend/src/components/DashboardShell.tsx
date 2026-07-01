@@ -28,11 +28,13 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
 
   return (
     <Link href={item.href}>
-      <div className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+      <div className={`group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all ${
         active
-          ? "bg-primary/10 text-primary shadow-sm"
-          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-      }`}>
+          ? "bg-primary/10 text-primary"
+          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+      }`}
+        style={active ? { boxShadow: "inset 0 0 0 1px rgba(109,40,217,0.15)" } : undefined}
+      >
         <item.icon className={`h-[18px] w-[18px] shrink-0 transition-colors ${active ? "text-primary" : "group-hover:text-foreground"}`} />
         {!collapsed && <span className="truncate">{item.label}</span>}
         {!collapsed && item.badge != null && item.badge > 0 && (
@@ -194,7 +196,7 @@ export function DashboardShell({
   return (
     <div className="flex min-h-screen bg-muted/20">
       {/* Desktop sidebar */}
-      <aside className={`relative hidden flex-col border-r bg-sidebar transition-all duration-300 lg:flex ${collapsed ? "w-[70px]" : "w-[220px]"}`}>
+      <aside className={`relative hidden flex-col border-r bg-sidebar transition-all duration-300 lg:flex ${collapsed ? "w-[72px]" : "w-[256px]"}`}>
         <SidebarContent />
       </aside>
 

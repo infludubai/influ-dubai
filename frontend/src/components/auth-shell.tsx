@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { Sparkles, CheckCircle2 } from "lucide-react";
 
 const FEATURES = [
-  { emoji: "🎯", text: "AI-powered creator matching for UAE & MENA campaigns" },
-  { emoji: "📊", text: "Real-time analytics — reach, engagement, ROI in one dashboard" },
-  { emoji: "💬", text: "Built-in messaging, proposals & contract management" },
-  { emoji: "🤖", text: "GPT-4o creator intelligence reports, fraud detection & predictions" },
+  { text: "AI-powered creator matching for UAE & MENA campaigns" },
+  { text: "Real-time analytics — reach, engagement, ROI in one dashboard" },
+  { text: "Built-in messaging, proposals & contract management" },
+  { text: "GPT-4o creator intelligence, fraud detection & predictions" },
 ];
 
 const TESTIMONIAL = {
@@ -40,7 +41,7 @@ export function AuthShell({
         <Link href="/" className="relative z-10">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-              <span className="text-lg font-bold text-white">I</span>
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
             <span className="text-xl font-bold text-white tracking-tight">InfluDubai AI</span>
           </div>
@@ -63,11 +64,9 @@ export function AuthShell({
           {/* Features list */}
           <div className="mt-8 space-y-3">
             {FEATURES.map((f, i) => (
-              <div key={i} className="flex items-center gap-3 animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/15 text-base backdrop-blur-sm">
-                  {f.emoji}
-                </div>
-                <p className="text-sm text-white/75">{f.text}</p>
+              <div key={i} className="flex items-center gap-3">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                <p className="text-sm text-white/80">{f.text}</p>
               </div>
             ))}
           </div>
@@ -96,7 +95,7 @@ export function AuthShell({
         {/* Mobile logo */}
         <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand">
-            <span className="text-sm font-bold text-white">I</span>
+            <Sparkles className="h-4 w-4 text-white" />
           </div>
           <span className="text-lg font-bold">InfluDubai <span className="gradient-text">AI</span></span>
         </Link>

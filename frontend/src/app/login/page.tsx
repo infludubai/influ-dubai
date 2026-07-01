@@ -62,7 +62,7 @@ export default function LoginPage() {
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
-            className={`w-full rounded-xl border bg-background px-4 py-2.5 text-sm outline-none transition-all input-glow placeholder:text-muted-foreground ${errors.email ? "border-destructive" : "border-border"}`}
+            className={`input-field ${errors.email ? "error" : ""}`}
             {...register("email")}
           />
           {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
@@ -80,7 +80,7 @@ export default function LoginPage() {
               type={showPw ? "text" : "password"}
               autoComplete="current-password"
               placeholder="••••••••"
-              className={`w-full rounded-xl border bg-background px-4 py-2.5 pr-11 text-sm outline-none transition-all input-glow placeholder:text-muted-foreground ${errors.password ? "border-destructive" : "border-border"}`}
+              className={`input-field pr-11 ${errors.password ? "error" : ""}`}
               {...register("password")}
             />
             <button type="button" onClick={() => setShowPw(v => !v)}
