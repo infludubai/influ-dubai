@@ -1,11 +1,6 @@
 {
   "framework": "nextjs",
-  "regions": ["dxb1"],
-  "env": {
-    "NEXT_PUBLIC_API_URL": "@infludubai_api_url",
-    "NEXT_PUBLIC_WS_URL": "@infludubai_ws_url",
-    "NEXT_PUBLIC_SUPABASE_URL": "@infludubai_supabase_url"
-  },
+  "regions": ["fra1"],
   "headers": [
     {
       "source": "/(.*)",
