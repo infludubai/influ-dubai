@@ -206,4 +206,31 @@
   .scrollbar-thin::-webkit-scrollbar-thumb:hover{background:#a1a1aa}
 
   .text-balance { text-wrap: balance; }
+
+  /* gradient utilities used across components */
+  .gradient-brand {
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── dark mode overrides ── */
+  .dark .input-field {
+    background: #18181b;
+    border-color: rgba(255,255,255,0.1);
+    color: #fafafa;
+    box-shadow: none;
+  }
+  .dark .input-field::placeholder { color: #52525b; }
+  .dark .input-field:focus { border-color: #8b5cf6; box-shadow: 0 0 0 3px rgba(139,92,246,0.15); }
+
+  .dark .card-base  { background: #18181b; border-color: rgba(255,255,255,0.07); }
+  .dark .card-interactive { background: #18181b; border-color: rgba(255,255,255,0.07); }
+  .dark .card-interactive:hover { border-color: rgba(139,92,246,0.4); box-shadow: 0 16px 48px rgba(139,92,246,0.12); }
+
+  .dark .shimmer { background: linear-gradient(90deg,#27272a 25%,#3f3f46 50%,#27272a 75%); background-size: 600px 100%; }
 }

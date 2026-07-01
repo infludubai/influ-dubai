@@ -12,6 +12,7 @@ import {
 import { api, type CreatorProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { FraudBadge } from "@/components/FraudBadge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CATEGORIES = ["Fashion", "Beauty", "Fitness", "Food", "Tech", "Travel", "Family", "Finance", "Lifestyle", "Education", "Entertainment", "Business"];
 const LANGUAGES  = ["Arabic", "English", "French", "Hindi", "Urdu", "Filipino", "Russian"];
@@ -356,6 +357,7 @@ export default function MarketplacePage() {
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
           </nav>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {user ? (
               <Link href="/dashboard">
                 <button className="gradient-brand rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md hover:opacity-90 transition-all">Dashboard</button>

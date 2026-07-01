@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle2, Sparkles, Zap, Building2, ArrowRight, HelpCircle } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuthStore } from "@/lib/auth-store";
 import { api } from "@/lib/api";
 
@@ -120,6 +121,7 @@ export default function PricingPage() {
             <span className="text-base font-bold">InfluDubai <span className="gradient-text">AI</span></span>
           </Link>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {accessToken
               ? <Link href="/dashboard"><button className="gradient-brand rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-md hover:opacity-90">Dashboard</button></Link>
               : <><Link href="/login"><button className="rounded-xl px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">Log in</button></Link>

@@ -7,6 +7,7 @@ import {
   ArrowRight, Search, BarChart3, ShieldCheck, Users,
   Sparkles, Zap, CheckCircle2, Star, MessageSquare, Globe, ChevronRight,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /* ─── data ─── */
 const STATS = [
@@ -182,6 +183,7 @@ export default function HomePage() {
           </nav>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <ThemeToggle variant={scrolled ? "default" : "ghost-white"} />
             <Link href="/login" style={{ padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, color: scrolled ? "#71717a" : "rgba(255,255,255,0.8)", textDecoration: "none" }}>Sign in</Link>
             <Link href="/register" style={{ textDecoration: "none" }}>
               <button style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 999, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(124,58,237,0.4)" }}>Get started free</button>

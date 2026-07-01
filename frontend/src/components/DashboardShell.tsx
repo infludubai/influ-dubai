@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from "@/lib/auth-store";
 import { api } from "@/lib/api";
 import { NotificationBell } from "./NotificationBell";
+import { ThemeToggle } from "./ThemeToggle";
 
 type NavItem = { href: string; label: string; icon: React.ElementType; badge?: number };
 
@@ -237,6 +238,7 @@ export function DashboardShell({
           </div>
           <div className="flex items-center gap-1">
             {actions && <div className="mr-2">{actions}</div>}
+            <ThemeToggle />
             <NotificationBell />
             <Link href="/messages">
               <button className="relative rounded-xl p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">

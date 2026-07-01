@@ -88,25 +88,25 @@ export function AuthShell({
       </div>
 
       {/* ── Right — form panel ── */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 bg-white">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 bg-background">
         {/* Mobile logo */}
         <Link href="/" className="mb-8 flex items-center gap-2 lg:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand">
             <Sparkles className="h-4 w-4 text-white" />
           </div>
-          <span className="text-lg font-bold text-gray-900">InfluDubai <span className="gradient-text">AI</span></span>
+          <span className="text-lg font-bold text-foreground">InfluDubai <span className="gradient-text">AI</span></span>
         </Link>
 
         <div className="w-full max-w-[400px] animate-scale-in">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">{title}</h1>
-            {description && <p className="mt-1.5 text-gray-500">{description}</p>}
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+            {description && <p className="mt-1.5 text-muted-foreground">{description}</p>}
           </div>
 
           {children}
 
           {footer && (
-            <p className="mt-6 text-center text-sm text-gray-500">{footer}</p>
+            <p className="mt-6 text-center text-sm text-muted-foreground">{footer}</p>
           )}
         </div>
       </div>
