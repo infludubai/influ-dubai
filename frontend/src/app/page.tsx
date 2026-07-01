@@ -2,27 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { motion, useInView } from "framer-motion";
+import { useInView } from "framer-motion";
 import {
   ArrowRight, Search, BarChart3, ShieldCheck, Users,
   Sparkles, Zap, CheckCircle2, Star, MessageSquare, Globe, ChevronRight,
 } from "lucide-react";
 
-/* ---------- animation helpers ---------- */
-function useFade() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, amount: 0.1 });
-  return { ref, inView };
-}
-
-const EASE = [0.25, 0.46, 0.45, 0.94] as const;
-const up = (delay = 0) => ({
-  initial: { opacity: 0, y: 28 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, delay, ease: EASE },
-});
-
-/* ---------- data ---------- */
+/* ─── data ─── */
 const STATS = [
   { value: "12,000+",  label: "Verified Creators" },
   { value: "850+",     label: "Active Brands" },
@@ -33,7 +19,7 @@ const STATS = [
 const FEATURES = [
   { icon: Search,        bg: "#f5f3ff", fg: "#7c3aed", title: "Creator Discovery",      body: "Search 12,000+ verified UAE & MENA creators by niche, location, followers, and engagement." },
   { icon: Users,         bg: "#eff6ff", fg: "#2563eb", title: "AI Matching Engine",      body: "GPT-4o powered matching recommends the best creators for every campaign brief automatically." },
-  { icon: ShieldCheck,   bg: "#f0fdf4", fg: "#16a34a", title: "Fraud Detection",         body: "Flag fake followers, bot engagement, and suspicious growth patterns before you spend a dirham." },
+  { icon: ShieldCheck,   bg: "#f0fdf4", fg: "#16a34a", title: "Fraud Detection",         body: "Flag fake followers, bot engagement, and suspicious growth patterns before you spend." },
   { icon: BarChart3,     bg: "#fff7ed", fg: "#ea580c", title: "Campaign Analytics",      body: "Real-time dashboards: reach, engagement, conversions, ROI — all in one view." },
   { icon: MessageSquare, bg: "#fdf4ff", fg: "#a21caf", title: "Built-in Collaboration",  body: "Proposals, contracts, messaging and deliverable tracking all inside the platform." },
   { icon: Globe,         bg: "#f0fdfa", fg: "#0f766e", title: "MENA-First Platform",     body: "Built for UAE, KSA, Egypt and MENA. Arabic-ready with local market intelligence." },
@@ -53,358 +39,315 @@ const TESTIMONIALS = [
 
 const BRANDS = ["Noon", "Emirates", "Majid Al Futtaim", "Talabat", "Careem", "ADNOC", "Emaar", "Etisalat"];
 
-/* ---------- sub-components ---------- */
-function FeatureCard({ f, i }: { f: typeof FEATURES[0]; i: number }) {
-  const { ref, inView } = useFade();
+/* ─── reveal wrapper — valid hook usage ─── */
+function Reveal({ children, delay = 0, className = "", style: extraStyle }: { children: React.ReactNode; delay?: number; className?: string; style?: React.CSSProperties }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.15 });
   return (
-    <motion.div ref={ref} {...up(i * 0.07)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-      className="group relative rounded-[20px] border border-zinc-100 bg-white p-8 transition-all duration-300 hover:-translate-y-1.5 hover:border-violet-200 hover:shadow-2xl hover:shadow-violet-100/60"
-      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(24px)",
+        transition: `opacity 0.6s ease ${delay}s, transform 0.6s ease ${delay}s`,
+        ...extraStyle,
+      }}
     >
-      <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-        style={{ background: f.bg }}>
-        <f.icon className="h-5 w-5" style={{ color: f.fg }} strokeWidth={1.8} />
-      </div>
-      <h3 className="mb-2 text-base font-semibold text-zinc-900">{f.title}</h3>
-      <p className="text-sm leading-relaxed text-zinc-500">{f.body}</p>
-      <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-violet-600 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-        Learn more <ChevronRight className="h-3.5 w-3.5" />
-      </div>
-    </motion.div>
+      {children}
+    </div>
   );
 }
 
-function Stat({ s, i }: { s: typeof STATS[0]; i: number }) {
-  const { ref, inView } = useFade();
+/* ─── feature card ─── */
+function FeatureCard({ f, delay }: { f: typeof FEATURES[0]; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
   return (
-    <motion.div ref={ref} {...up(i * 0.08)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-      className="text-center">
-      <p className="text-4xl font-bold text-white">{s.value}</p>
-      <p className="mt-1 text-sm text-white/50">{s.label}</p>
-    </motion.div>
+    <div
+      ref={ref}
+      style={{
+        background: "#fff",
+        border: "1px solid #e4e4e7",
+        borderRadius: 20,
+        padding: 32,
+        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        cursor: "default",
+        opacity: inView ? 1 : 0,
+        transform: inView ? "translateY(0)" : "translateY(24px)",
+        transition: `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s, box-shadow 0.2s, border-color 0.2s`,
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-4px)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 20px 48px rgba(124,58,237,0.12)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = "rgba(124,58,237,0.3)";
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)";
+        (e.currentTarget as HTMLDivElement).style.borderColor = "#e4e4e7";
+      }}
+    >
+      <div style={{ width: 48, height: 48, borderRadius: 14, background: f.bg, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+        <f.icon size={20} color={f.fg} strokeWidth={1.8} />
+      </div>
+      <h3 style={{ fontSize: 15, fontWeight: 600, color: "#09090b", marginBottom: 8 }}>{f.title}</h3>
+      <p style={{ fontSize: 14, lineHeight: 1.65, color: "#71717a" }}>{f.body}</p>
+    </div>
   );
 }
 
-/* ---------- page ---------- */
+/* ─── testimonial card ─── */
+function TestiCard({ t, delay }: { t: typeof TESTIMONIALS[0]; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
+  return (
+    <div ref={ref} style={{
+      background: "#fff", border: "1px solid #f4f4f5", borderRadius: 20, padding: 32,
+      boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+      opacity: inView ? 1 : 0,
+      transform: inView ? "translateY(0)" : "translateY(24px)",
+      transition: `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s`,
+    }}>
+      <div style={{ display: "flex", gap: 2, marginBottom: 16 }}>
+        {Array.from({ length: 5 }).map((_, i) => <Star key={i} size={16} style={{ fill: "#f59e0b", color: "#f59e0b" }} />)}
+      </div>
+      <p style={{ fontSize: 14, lineHeight: 1.65, color: "#52525b" }}>"{t.q}"</p>
+      <div style={{ marginTop: 24, display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#f5f3ff", color: "#7c3aed", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, flexShrink: 0 }}>{t.init}</div>
+        <div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: "#09090b" }}>{t.name}</p>
+          <p style={{ fontSize: 12, color: "#a1a1aa" }}>{t.role}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── step card ─── */
+function StepCard({ s, delay }: { s: typeof STEPS[0]; delay: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, amount: 0.2 });
+  return (
+    <div ref={ref} style={{
+      background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: 20, padding: 32,
+      opacity: inView ? 1 : 0,
+      transform: inView ? "translateY(0)" : "translateY(24px)",
+      transition: `opacity 0.5s ease ${delay}s, transform 0.5s ease ${delay}s`,
+    }}>
+      <p style={{ fontSize: 72, fontWeight: 900, color: "rgba(139,92,246,0.15)", lineHeight: 1, marginBottom: 16 }}>{s.n}</p>
+      <h3 style={{ fontSize: 18, fontWeight: 600, color: "#fff", marginBottom: 10 }}>{s.title}</h3>
+      <p style={{ fontSize: 14, lineHeight: 1.65, color: "rgba(255,255,255,0.45)" }}>{s.body}</p>
+    </div>
+  );
+}
+
+/* ─── main page ─── */
 export default function HomePage() {
   const [scrolled, setScrolled] = useState(false);
-
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
+    const fn = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
-    <div className="min-h-screen overflow-x-hidden" style={{ fontFamily: "system-ui,-apple-system,sans-serif" }}>
+    <div style={{ fontFamily: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", overflowX: "hidden", minHeight: "100vh" }}>
 
-      {/* ════════════════ NAVBAR ════════════════ */}
-      <header
-        className="fixed inset-x-0 top-0 z-50 transition-all duration-300"
-        style={scrolled
-          ? { background: "rgba(255,255,255,0.95)", backdropFilter: "blur(16px)", borderBottom: "1px solid #f4f4f5", boxShadow: "0 1px 8px rgba(0,0,0,0.06)" }
-          : { background: "transparent" }
-        }
-      >
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "linear-gradient(135deg,#7c3aed,#8b5cf6)" }}>
-              <Sparkles className="h-4 w-4 text-white" strokeWidth={1.8} />
+      {/* ═══════════ NAVBAR ═══════════ */}
+      <header style={{
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+        padding: "0 24px",
+        background: scrolled ? "rgba(255,255,255,0.95)" : "transparent",
+        backdropFilter: scrolled ? "blur(16px)" : "none",
+        borderBottom: scrolled ? "1px solid #f4f4f5" : "none",
+        boxShadow: scrolled ? "0 1px 8px rgba(0,0,0,0.06)" : "none",
+        transition: "all 0.3s ease",
+      }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
+          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={16} color="#fff" strokeWidth={1.8} />
             </div>
-            <span className="text-[15px] font-bold" style={{ color: scrolled ? "#09090b" : "#fff" }}>
-              InfluDubai{" "}
-              <span style={{ color: scrolled ? "#7c3aed" : "#a78bfa" }}>AI</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: scrolled ? "#09090b" : "#fff", letterSpacing: "-0.02em" }}>
+              InfluDubai <span style={{ color: scrolled ? "#7c3aed" : "#a78bfa" }}>AI</span>
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav style={{ display: "flex", gap: 4 }}>
             {[{ href: "/marketplace", l: "Marketplace" }, { href: "/pricing", l: "Pricing" }].map(({ href, l }) => (
-              <Link key={href} href={href}
-                className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                style={{ color: scrolled ? "#71717a" : "rgba(255,255,255,0.7)" }}
-                onMouseEnter={e => (e.currentTarget.style.color = scrolled ? "#09090b" : "#fff")}
-                onMouseLeave={e => (e.currentTarget.style.color = scrolled ? "#71717a" : "rgba(255,255,255,0.7)")}
-              >{l}</Link>
+              <Link key={href} href={href} style={{ padding: "8px 14px", borderRadius: 8, fontSize: 14, fontWeight: 500, color: scrolled ? "#71717a" : "rgba(255,255,255,0.7)", textDecoration: "none", transition: "color 0.15s" }}>{l}</Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Link href="/login">
-              <button className="rounded-full px-4 py-2 text-sm font-semibold transition-all"
-                style={{ color: scrolled ? "#71717a" : "rgba(255,255,255,0.8)", background: "transparent" }}
-              >Sign in</button>
-            </Link>
-            <Link href="/register">
-              <button className="btn-primary py-2.5 px-5 text-sm">Get started free</button>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Link href="/login" style={{ padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, color: scrolled ? "#71717a" : "rgba(255,255,255,0.8)", textDecoration: "none" }}>Sign in</Link>
+            <Link href="/register" style={{ textDecoration: "none" }}>
+              <button style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 999, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(124,58,237,0.4)" }}>Get started free</button>
             </Link>
           </div>
         </div>
       </header>
 
-      {/* ════════════════ HERO ════════════════ */}
+      {/* ═══════════ HERO ═══════════ */}
       <section style={{ background: "#08060f", minHeight: "100vh", display: "flex", alignItems: "center", position: "relative", overflow: "hidden" }}>
-        {/* mesh background */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-          <div style={{ position: "absolute", top: "15%", left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.25) 0%, transparent 70%)", filter: "blur(60px)" }} />
-          <div style={{ position: "absolute", bottom: 0, right: "-10%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(79,70,229,0.15) 0%, transparent 70%)", filter: "blur(60px)" }} />
-          <div style={{ position: "absolute", top: "30%", left: "-5%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%)", filter: "blur(60px)" }} />
-          {/* grid lines */}
-          <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.04 }}>
-            <defs>
-              <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
-                <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#ffffff" strokeWidth="0.5" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#grid)" />
+          <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.28) 0%,transparent 70%)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", bottom: 0, right: "-5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.18) 0%,transparent 70%)", filter: "blur(60px)" }} />
+          <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.035 }}>
+            <defs><pattern id="g" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0L0 0 0 60" fill="none" stroke="#fff" strokeWidth="0.5" /></pattern></defs>
+            <rect width="100%" height="100%" fill="url(#g)" />
           </svg>
         </div>
 
-        <div className="relative z-10 mx-auto w-full max-w-5xl px-6 py-32 text-center">
+        <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "128px 24px 80px", textAlign: "center", width: "100%" }}>
           {/* badge */}
-          <motion.div {...up(0)} className="mb-8 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium"
-            style={{ background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#c4b5fd" }}
-          >
-            <Zap className="h-3.5 w-3.5 text-violet-400" strokeWidth={2} />
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "6px 16px", borderRadius: 999, background: "rgba(124,58,237,0.15)", border: "1px solid rgba(124,58,237,0.3)", color: "#c4b5fd", fontSize: 13, fontWeight: 500, marginBottom: 32 }}>
+            <Zap size={14} color="#a78bfa" strokeWidth={2} />
             UAE &amp; MENA Creator Intelligence Platform
-            <span className="ml-1 h-1.5 w-1.5 rounded-full bg-emerald-400" />
-          </motion.div>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#34d399", marginLeft: 4 }} />
+          </div>
 
-          {/* headline */}
-          <motion.h1 {...up(0.1)} className="mb-6 text-5xl font-bold leading-[1.07] sm:text-6xl lg:text-[76px]" style={{ color: "#fff", textWrap: "balance" }}>
+          {/* headline — no animation on opacity so always visible */}
+          <h1 style={{ fontSize: "clamp(40px,6vw,72px)", fontWeight: 800, color: "#fff", lineHeight: 1.06, letterSpacing: "-0.03em", marginBottom: 24, textWrap: "balance" } as React.CSSProperties}>
             Discover. Match.{" "}
             <span style={{ background: "linear-gradient(135deg,#8b5cf6,#c4b5fd)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
               Run campaigns that perform.
             </span>
-          </motion.h1>
+          </h1>
 
-          {/* sub */}
-          <motion.p {...up(0.18)} className="mx-auto mb-10 max-w-xl text-lg leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <p style={{ fontSize: 18, lineHeight: 1.65, color: "rgba(255,255,255,0.52)", maxWidth: 560, margin: "0 auto 40px" }}>
             AI-powered creator discovery, fraud detection and live analytics for brands and agencies across the UAE and MENA.
-          </motion.p>
+          </p>
 
-          {/* CTAs */}
-          <motion.div {...up(0.25)} className="flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href="/register?role=BRAND">
-              <button className="btn-primary text-base py-3.5 px-9">
-                Start as a Brand <ArrowRight className="h-4 w-4" />
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+            <Link href="/register?role=BRAND" style={{ textDecoration: "none" }}>
+              <button style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#7c3aed", color: "#fff", border: "none", borderRadius: 999, padding: "14px 36px", fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.45)" }}>
+                Start as a Brand <ArrowRight size={16} />
               </button>
             </Link>
-            <Link href="/marketplace">
-              <button className="btn-ghost-white text-base py-3.5 px-9">
+            <Link href="/marketplace" style={{ textDecoration: "none" }}>
+              <button style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 999, padding: "14px 36px", fontSize: 15, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>
                 Browse Creators
               </button>
             </Link>
-          </motion.div>
+          </div>
 
           {/* stats */}
-          <motion.div {...up(0.33)} className="mt-24 grid grid-cols-2 gap-8 sm:grid-cols-4 pt-12" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            {STATS.map((s, i) => <Stat key={s.label} s={s} i={i} />)}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ════════════════ BRAND LOGOS ════════════════ */}
-      <section style={{ background: "#fff", borderBottom: "1px solid #f4f4f5", padding: "40px 24px" }}>
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="mb-7 text-xs font-semibold uppercase tracking-[0.15em]" style={{ color: "#a1a1aa" }}>
-            Trusted by leading brands across UAE &amp; MENA
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
-            {BRANDS.map(b => (
-              <span key={b} className="text-sm font-bold tracking-wide transition-colors" style={{ color: "#d4d4d8" }}
-                onMouseEnter={e => (e.currentTarget.style.color = "#71717a")}
-                onMouseLeave={e => (e.currentTarget.style.color = "#d4d4d8")}
-              >{b}</span>
+          <div style={{ marginTop: 80, display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 48 }}>
+            {STATS.map(s => (
+              <div key={s.label} style={{ textAlign: "center" }}>
+                <p style={{ fontSize: 36, fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>{s.value}</p>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.45)", marginTop: 4 }}>{s.label}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ════════════════ FEATURES ════════════════ */}
-      <section style={{ background: "#fff", padding: "100px 24px" }}>
-        <div className="mx-auto max-w-7xl">
-          {/* section header */}
-          {(() => {
-            const { ref, inView } = useFade();
-            return (
-              <div ref={ref} className="mb-16 text-center">
-                <motion.p {...up(0)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="mb-3 text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "#7c3aed" }}>
-                  Platform capabilities
-                </motion.p>
-                <motion.h2 {...up(0.08)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="text-4xl font-bold sm:text-5xl" style={{ color: "#09090b" }}>
-                  Everything to run<br className="hidden sm:block" /> creator campaigns
-                </motion.h2>
-                <motion.p {...up(0.14)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="mx-auto mt-4 max-w-lg text-lg" style={{ color: "#71717a" }}>
-                  From discovery to payment — one unified platform built for MENA.
-                </motion.p>
-              </div>
-            );
-          })()}
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {FEATURES.map((f, i) => <FeatureCard key={f.title} f={f} i={i} />)}
+      {/* ═══════════ BRANDS ═══════════ */}
+      <section style={{ background: "#fff", borderBottom: "1px solid #f4f4f5", padding: "40px 24px" }}>
+        <div style={{ maxWidth: 1024, margin: "0 auto", textAlign: "center" }}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a1a1aa", marginBottom: 28 }}>Trusted by leading brands across UAE &amp; MENA</p>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "16px 40px" }}>
+            {BRANDS.map(b => <span key={b} style={{ fontSize: 14, fontWeight: 700, color: "#d4d4d8", letterSpacing: "0.02em" }}>{b}</span>)}
           </div>
         </div>
       </section>
 
-      {/* ════════════════ HOW IT WORKS ════════════════ */}
-      <section style={{ background: "#08060f", padding: "100px 24px" }}>
-        <div className="mx-auto max-w-6xl">
-          {(() => {
-            const { ref, inView } = useFade();
-            return (
-              <div ref={ref} className="mb-16 text-center">
-                <motion.p {...up(0)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="mb-3 text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "#8b5cf6" }}>
-                  Simple by design
-                </motion.p>
-                <motion.h2 {...up(0.08)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="text-4xl font-bold sm:text-5xl" style={{ color: "#fff" }}>
-                  From brief to results<br className="hidden sm:block" /> in 3 steps
-                </motion.h2>
-              </div>
-            );
-          })()}
-
-          <div className="grid gap-5 sm:grid-cols-3">
-            {STEPS.map((s, i) => {
-              const { ref, inView } = useFade();
-              return (
-                <motion.div key={s.n} ref={ref} {...up(i * 0.1)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-                  className="rounded-[20px] p-8"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
-                >
-                  <p className="mb-5 text-6xl font-black" style={{ color: "rgba(139,92,246,0.18)", lineHeight: 1 }}>{s.n}</p>
-                  <h3 className="mb-3 text-lg font-semibold" style={{ color: "#fff" }}>{s.title}</h3>
-                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.body}</p>
-                </motion.div>
-              );
-            })}
+      {/* ═══════════ FEATURES ═══════════ */}
+      <section style={{ background: "#fff", padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          <Reveal className="text-center" style={{ marginBottom: 56 } as React.CSSProperties}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#7c3aed", marginBottom: 12 }}>Platform capabilities</p>
+            <h2 style={{ fontSize: "clamp(32px,4vw,48px)", fontWeight: 800, color: "#09090b", letterSpacing: "-0.03em", marginBottom: 16 }}>
+              Everything to run<br />creator campaigns
+            </h2>
+            <p style={{ fontSize: 17, color: "#71717a", maxWidth: 480, margin: "0 auto" }}>From discovery to payment — one unified platform built for MENA.</p>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20 }}>
+            {FEATURES.map((f, i) => <FeatureCard key={f.title} f={f} delay={i * 0.07} />)}
           </div>
         </div>
       </section>
 
-      {/* ════════════════ TESTIMONIALS ════════════════ */}
-      <section style={{ background: "#fafafa", padding: "100px 24px" }}>
-        <div className="mx-auto max-w-6xl">
-          {(() => {
-            const { ref, inView } = useFade();
-            return (
-              <div ref={ref} className="mb-14 text-center">
-                <motion.p {...up(0)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="mb-3 text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "#7c3aed" }}>
-                  Social proof
-                </motion.p>
-                <motion.h2 {...up(0.08)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                  className="text-4xl font-bold sm:text-5xl" style={{ color: "#09090b" }}>
-                  Loved by brands<br className="hidden sm:block" /> and creators alike
-                </motion.h2>
-              </div>
-            );
-          })()}
-          <div className="grid gap-5 sm:grid-cols-3">
-            {TESTIMONIALS.map((t, i) => {
-              const { ref, inView } = useFade();
-              return (
-                <motion.div key={t.name} ref={ref} {...up(i * 0.09)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
-                  className="rounded-[20px] bg-white p-8"
-                  style={{ border: "1px solid #f4f4f5", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}
-                >
-                  <div className="mb-4 flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <Star key={j} className="h-4 w-4" style={{ fill: "#f59e0b", color: "#f59e0b" }} />
-                    ))}
-                  </div>
-                  <p className="text-sm leading-relaxed" style={{ color: "#52525b" }}>"{t.q}"</p>
-                  <div className="mt-6 flex items-center gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                      style={{ background: "#f5f3ff", color: "#7c3aed" }}>
-                      {t.init}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold" style={{ color: "#09090b" }}>{t.name}</p>
-                      <p className="text-xs" style={{ color: "#a1a1aa" }}>{t.role}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+      {/* ═══════════ HOW IT WORKS ═══════════ */}
+      <section style={{ background: "#08060f", padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <Reveal className="text-center" style={{ marginBottom: 56 } as React.CSSProperties}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#8b5cf6", marginBottom: 12 }}>Simple by design</p>
+            <h2 style={{ fontSize: "clamp(32px,4vw,48px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em" }}>From brief to results in 3 steps</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20 }}>
+            {STEPS.map((s, i) => <StepCard key={s.n} s={s} delay={i * 0.1} />)}
           </div>
         </div>
       </section>
 
-      {/* ════════════════ CTA ════════════════ */}
-      <section style={{ background: "linear-gradient(135deg,#7c3aed 0%,#4f46e5 50%,#2563eb 100%)", padding: "100px 24px", position: "relative", overflow: "hidden" }}>
+      {/* ═══════════ TESTIMONIALS ═══════════ */}
+      <section style={{ background: "#fafafa", padding: "96px 24px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <Reveal className="text-center" style={{ marginBottom: 56 } as React.CSSProperties}>
+            <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#7c3aed", marginBottom: 12 }}>Social proof</p>
+            <h2 style={{ fontSize: "clamp(32px,4vw,48px)", fontWeight: 800, color: "#09090b", letterSpacing: "-0.03em" }}>Loved by brands and creators alike</h2>
+          </Reveal>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 20 }}>
+            {TESTIMONIALS.map((t, i) => <TestiCard key={t.name} t={t} delay={i * 0.09} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════ CTA ═══════════ */}
+      <section style={{ background: "linear-gradient(135deg,#7c3aed 0%,#4f46e5 50%,#2563eb 100%)", padding: "96px 24px", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
-          <div style={{ position: "absolute", top: "-30%", right: "-10%", width: 600, height: 600, borderRadius: "50%", background: "rgba(255,255,255,0.06)", filter: "blur(60px)" }} />
-          <div style={{ position: "absolute", bottom: "-30%", left: "-10%", width: 500, height: 500, borderRadius: "50%", background: "rgba(255,255,255,0.04)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", top: "-40%", right: "-10%", width: 600, height: 600, borderRadius: "50%", background: "rgba(255,255,255,0.07)", filter: "blur(60px)" }} />
+          <div style={{ position: "absolute", bottom: "-40%", left: "-10%", width: 500, height: 500, borderRadius: "50%", background: "rgba(255,255,255,0.05)", filter: "blur(60px)" }} />
         </div>
-        {(() => {
-          const { ref, inView } = useFade();
-          return (
-            <div ref={ref} className="relative z-10 mx-auto max-w-2xl text-center">
-              <motion.p {...up(0)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                className="mb-3 text-xs font-bold uppercase tracking-[0.15em]" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Ready to grow?
-              </motion.p>
-              <motion.h2 {...up(0.08)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                className="text-4xl font-bold sm:text-5xl" style={{ color: "#fff", textWrap: "balance" }}>
-                Join 12,000+ creators and 850+ brands running smarter campaigns.
-              </motion.h2>
-              <motion.p {...up(0.14)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                className="mx-auto mt-4 max-w-sm text-lg" style={{ color: "rgba(255,255,255,0.55)" }}>
-                Start free. No credit card required.
-              </motion.p>
-              <motion.div {...up(0.2)} animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
-                className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link href="/register">
-                  <button className="btn-white text-base py-3.5 px-10">
-                    Get started free <ArrowRight className="h-4 w-4" />
-                  </button>
-                </Link>
-                <Link href="/marketplace">
-                  <button className="btn-ghost-white text-base py-3.5 px-10">
-                    Browse creators
-                  </button>
-                </Link>
-              </motion.div>
-            </div>
-          );
-        })()}
+        <Reveal className="relative z-10 text-center" style={{ maxWidth: 600, margin: "0 auto" } as React.CSSProperties}>
+          <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", marginBottom: 12 }}>Ready to grow?</p>
+          <h2 style={{ fontSize: "clamp(28px,4vw,44px)", fontWeight: 800, color: "#fff", letterSpacing: "-0.03em", marginBottom: 16, textWrap: "balance" } as React.CSSProperties}>
+            Join 12,000+ creators and 850+ brands running smarter campaigns.
+          </h2>
+          <p style={{ fontSize: 17, color: "rgba(255,255,255,0.55)", marginBottom: 40 }}>Start free. No credit card required.</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+            <Link href="/register" style={{ textDecoration: "none" }}>
+              <button style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff", color: "#7c3aed", border: "none", borderRadius: 999, padding: "14px 40px", fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 4px 24px rgba(0,0,0,0.15)" }}>
+                Get started free <ArrowRight size={16} />
+              </button>
+            </Link>
+            <Link href="/marketplace" style={{ textDecoration: "none" }}>
+              <button style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.1)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 999, padding: "14px 40px", fontSize: 15, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>
+                Browse creators
+              </button>
+            </Link>
+          </div>
+        </Reveal>
       </section>
 
-      {/* ════════════════ FOOTER ════════════════ */}
+      {/* ═══════════ FOOTER ═══════════ */}
       <footer style={{ background: "#fff", borderTop: "1px solid #f4f4f5", padding: "64px 24px" }}>
-        <div className="mx-auto max-w-7xl grid gap-10 sm:grid-cols-4">
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40 }}>
           <div>
-            <Link href="/" className="mb-4 flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: "linear-gradient(135deg,#7c3aed,#8b5cf6)" }}>
-                <Sparkles className="h-3.5 w-3.5 text-white" strokeWidth={1.8} />
+            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", marginBottom: 12 }}>
+              <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Sparkles size={14} color="#fff" strokeWidth={1.8} />
               </div>
-              <span className="text-sm font-bold" style={{ color: "#09090b" }}>
-                InfluDubai <span style={{ color: "#7c3aed" }}>AI</span>
-              </span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#09090b" }}>InfluDubai <span style={{ color: "#7c3aed" }}>AI</span></span>
             </Link>
-            <p className="text-sm leading-relaxed" style={{ color: "#a1a1aa" }}>Creator intelligence for the UAE &amp; MENA region.</p>
-            <p className="mt-5 text-xs" style={{ color: "#d4d4d8" }}>© 2025 InfluDubai AI. All rights reserved.</p>
+            <p style={{ fontSize: 14, color: "#a1a1aa", lineHeight: 1.65, maxWidth: 220 }}>Creator intelligence for the UAE &amp; MENA region.</p>
+            <p style={{ fontSize: 12, color: "#d4d4d8", marginTop: 20 }}>© 2025 InfluDubai AI. All rights reserved.</p>
           </div>
           {[
             { h: "Platform", links: [["Marketplace","/marketplace"],["For Creators","/register?role=CREATOR"],["For Brands","/register?role=BRAND"],["Pricing","/pricing"]] },
             { h: "Company",  links: [["About","#"],["Blog","#"],["Careers","#"],["Contact","#"]] },
-            { h: "Legal",    links: [["Privacy Policy","#"],["Terms of Service","#"],["Cookie Policy","#"]] },
+            { h: "Legal",    links: [["Privacy","#"],["Terms","#"],["Cookies","#"]] },
           ].map(col => (
             <div key={col.h}>
-              <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: "#a1a1aa" }}>{col.h}</p>
-              <div className="space-y-3">
-                {col.links.map(([label, href]) => (
-                  <Link key={label} href={href}
-                    className="block text-sm transition-colors"
-                    style={{ color: "#71717a" }}
-                    onMouseEnter={e => (e.currentTarget.style.color = "#09090b")}
-                    onMouseLeave={e => (e.currentTarget.style.color = "#71717a")}
-                  >{label}</Link>
+              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#a1a1aa", marginBottom: 16 }}>{col.h}</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {col.links.map(([l, h]) => (
+                  <Link key={l} href={h} style={{ fontSize: 14, color: "#71717a", textDecoration: "none" }}>{l}</Link>
                 ))}
               </div>
             </div>
