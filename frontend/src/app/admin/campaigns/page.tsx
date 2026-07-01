@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth-store";
@@ -9,11 +9,11 @@ type Campaign = { id: string; title: string; status: string; budgetUsd: number; 
 const STATUSES = ["", "DRAFT", "ACTIVE", "PAUSED", "COMPLETED", "CANCELLED"];
 
 const STATUS_COLOR: Record<string, string> = {
-  ACTIVE: "bg-green-50 text-green-700",
-  DRAFT: "bg-gray-100 text-gray-600",
-  PAUSED: "bg-yellow-50 text-yellow-700",
-  COMPLETED: "bg-blue-50 text-blue-700",
-  CANCELLED: "bg-red-50 text-red-700",
+  ACTIVE: "bg-emerald-500/10 text-emerald-600",
+  DRAFT: "bg-muted text-muted-foreground",
+  PAUSED: "bg-yellow-500/10 text-yellow-600",
+  COMPLETED: "bg-blue-500/10 text-blue-600",
+  CANCELLED: "bg-red-500/10 text-red-600",
 };
 
 export default function AdminCampaignsPage() {
@@ -56,7 +56,7 @@ export default function AdminCampaignsPage() {
 
       <div className="overflow-hidden rounded-2xl border bg-card">
         {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">Loadingâ€¦</div>
         ) : (
           <table className="w-full text-sm">
             <thead>

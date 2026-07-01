@@ -11,17 +11,17 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { CampaignPredictor } from "@/components/CampaignPredictor";
 
 const STATUS_COLOR: Record<string, string> = {
-  DRAFT:     "bg-yellow-50 text-yellow-700 border-yellow-200",
-  ACTIVE:    "bg-green-50 text-green-700 border-green-200",
-  PAUSED:    "bg-orange-50 text-orange-700 border-orange-200",
-  COMPLETED: "bg-blue-50 text-blue-700 border-blue-200",
+  DRAFT:     "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
+  ACTIVE:    "bg-green-500/10 text-green-600 border-green-500/20",
+  PAUSED:    "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  COMPLETED: "bg-blue-500/10 text-blue-600 border-blue-200",
   CANCELLED: "bg-gray-100 text-gray-500 border-gray-200",
 };
 
 const TRANSITIONS: Record<string, { label: string; next: string; style: string }[]> = {
-  DRAFT:    [{ label: "Activate", next: "ACTIVE",    style: "gradient-brand text-white" }, { label: "Cancel", next: "CANCELLED", style: "border border-red-200 text-red-600 hover:bg-red-50" }],
-  ACTIVE:   [{ label: "Pause",   next: "PAUSED",    style: "border hover:bg-muted" },      { label: "Complete", next: "COMPLETED", style: "border border-green-200 text-green-700 hover:bg-green-50" }],
-  PAUSED:   [{ label: "Resume",  next: "ACTIVE",    style: "gradient-brand text-white" }, { label: "Cancel", next: "CANCELLED", style: "border border-red-200 text-red-600 hover:bg-red-50" }],
+  DRAFT:    [{ label: "Activate", next: "ACTIVE",    style: "gradient-brand text-white" }, { label: "Cancel", next: "CANCELLED", style: "border border-red-200 text-red-600 hover:bg-red-500/10" }],
+  ACTIVE:   [{ label: "Pause",   next: "PAUSED",    style: "border hover:bg-muted" },      { label: "Complete", next: "COMPLETED", style: "border border-green-200 text-green-600 hover:bg-green-500/10" }],
+  PAUSED:   [{ label: "Resume",  next: "ACTIVE",    style: "gradient-brand text-white" }, { label: "Cancel", next: "CANCELLED", style: "border border-red-200 text-red-600 hover:bg-red-500/10" }],
   COMPLETED: [],
   CANCELLED: [],
 };
@@ -114,7 +114,7 @@ export default function CampaignDetailPage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0, transition: { delay: 0.08 } }}
           className="mb-5 grid gap-4 sm:grid-cols-2">
           <div className="flex items-center gap-3 rounded-2xl border bg-card p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
               <DollarSign className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
@@ -123,7 +123,7 @@ export default function CampaignDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-3 rounded-2xl border bg-card p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
               <Tag className="h-5 w-5 text-blue-600" />
             </div>
             <div>
@@ -223,7 +223,7 @@ export default function CampaignDetailPage() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { delay: 0.24 } }}
             className="flex justify-end">
             <button onClick={deleteCampaign}
-              className="flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+              className="flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm text-red-600 hover:bg-red-500/10 transition-colors">
               <Trash2 className="h-4 w-4" /> Delete campaign
             </button>
           </motion.div>

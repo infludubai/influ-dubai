@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,7 +14,7 @@ type Subscription = Awaited<ReturnType<typeof api.getSubscription>>;
 const PLAN_META: Record<string, { label: string; icon: React.ReactNode; color: string; price: number }> = {
   FREE:         { label: "Free",         icon: <Zap className="h-4 w-4" />,       color: "bg-gray-100 text-gray-700",    price: 0 },
   PROFESSIONAL: { label: "Professional", icon: <Sparkles className="h-4 w-4" />,  color: "bg-primary/10 text-primary",   price: 99 },
-  ENTERPRISE:   { label: "Enterprise",   icon: <Building2 className="h-4 w-4" />, color: "bg-purple-100 text-purple-700", price: 299 },
+  ENTERPRISE:   { label: "Enterprise",   icon: <Building2 className="h-4 w-4" />, color: "bg-purple-500/10 text-purple-500", price: 299 },
 };
 
 function BillingContent() {
@@ -72,9 +72,9 @@ function BillingContent() {
 
         {justUpgraded && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+            className="mb-5 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
-            <p className="text-sm font-medium text-emerald-800">Your plan was upgraded successfully!</p>
+            <p className="text-sm font-medium text-emerald-600">Your plan was upgraded successfully!</p>
           </motion.div>
         )}
 
@@ -94,7 +94,7 @@ function BillingContent() {
                     <span className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold ${meta.color}`}>
                       {meta.icon} {meta.label}
                     </span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${sub?.status === "ACTIVE" ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${sub?.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-600" : "bg-yellow-500/10 text-yellow-600"}`}>
                       {sub?.status ?? "ACTIVE"}
                     </span>
                   </div>
@@ -120,8 +120,8 @@ function BillingContent() {
                   )}
                   {plan !== "FREE" && !sub?.cancelAtPeriodEnd && (
                     <button onClick={cancel} disabled={cancelling}
-                      className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 transition-colors">
-                      {cancelling ? "Cancelling…" : "Cancel"}
+                      className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-colors">
+                      {cancelling ? "Cancellingâ€¦" : "Cancel"}
                     </button>
                   )}
                 </div>
@@ -141,7 +141,7 @@ function BillingContent() {
                       <p className="text-2xl font-bold">${m.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
                       <button onClick={() => upgrade(p)} disabled={upgrading === p}
                         className={`mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all disabled:opacity-60 ${p === "PROFESSIONAL" ? "gradient-brand text-white hover:opacity-90" : "border hover:bg-muted"}`}>
-                        {upgrading === p ? "Processing…" : `Upgrade to ${m.label}`}
+                        {upgrading === p ? "Processingâ€¦" : `Upgrade to ${m.label}`}
                       </button>
                     </div>
                   );
@@ -156,7 +156,7 @@ function BillingContent() {
                 <p className="mt-1 text-sm text-muted-foreground">Upgrade to Enterprise for unlimited campaigns and a dedicated account manager.</p>
                 <button onClick={() => upgrade("ENTERPRISE")} disabled={upgrading === "ENTERPRISE"}
                   className="mt-3 rounded-xl border px-5 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-60 transition-colors">
-                  {upgrading === "ENTERPRISE" ? "Processing…" : "Upgrade to Enterprise"}
+                  {upgrading === "ENTERPRISE" ? "Processingâ€¦" : "Upgrade to Enterprise"}
                 </button>
               </motion.div>
             )}
@@ -181,7 +181,7 @@ function BillingContent() {
                         <p className="text-xs text-muted-foreground">{new Date(inv.createdAt).toLocaleDateString("en-AE", { dateStyle: "medium" })}</p>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-emerald-500/10 text-emerald-600" : "bg-yellow-500/10 text-yellow-600"}`}>
                           {inv.status}
                         </span>
                         {inv.pdfUrl && (
@@ -199,7 +199,7 @@ function BillingContent() {
 
             <p className="mt-4 text-center text-xs text-muted-foreground">
               Payments processed securely by Stripe.{" "}
-              <Link href="/pricing" className="text-primary hover:underline">View all plans →</Link>
+              <Link href="/pricing" className="text-primary hover:underline">View all plans â†’</Link>
             </p>
           </>
         )}

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
@@ -84,7 +84,7 @@ export default function AdminRevenuePage() {
                       <p className="font-medium">${inv.amountUsd.toFixed(2)}</p>
                       <p className="text-xs text-muted-foreground">{new Date(inv.createdAt).toLocaleDateString("en-AE", { dateStyle: "medium" })}</p>
                     </div>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.status === "paid" ? "bg-emerald-500/10 text-emerald-600" : "bg-yellow-500/10 text-yellow-600"}`}>
                       {inv.status}
                     </span>
                   </div>

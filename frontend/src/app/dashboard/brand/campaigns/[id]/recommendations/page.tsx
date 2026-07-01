@@ -19,8 +19,8 @@ function fmt(n: number) {
 
 function ScoreRing({ score }: { score: number }) {
   const color =
-    score >= 70 ? "text-emerald-600 border-emerald-400 bg-emerald-50" :
-    score >= 40 ? "text-amber-600 border-amber-400 bg-amber-50" :
+    score >= 70 ? "text-emerald-600 border-emerald-400 bg-emerald-500/10" :
+    score >= 40 ? "text-amber-600 border-amber-400 bg-amber-500/10" :
                   "text-gray-500 border-gray-300 bg-gray-50";
   return (
     <div className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full border-2 font-bold ${color}`}>
@@ -50,10 +50,10 @@ function ScoreBar({ label, value, max, color }: { label: string; value: number; 
 }
 
 const PLATFORM_COLOR: Record<string, string> = {
-  INSTAGRAM: "bg-pink-50 text-pink-600",
-  YOUTUBE:   "bg-red-50 text-red-600",
+  INSTAGRAM: "bg-pink-500/10 text-pink-600",
+  YOUTUBE:   "bg-red-500/10 text-red-600",
   TIKTOK:    "bg-gray-900 text-white",
-  LINKEDIN:  "bg-blue-50 text-blue-700",
+  LINKEDIN:  "bg-blue-500/10 text-blue-600",
   X:         "bg-gray-100 text-gray-700",
 };
 
@@ -157,7 +157,7 @@ export default function RecommendationsPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-semibold">{m.displayName}</span>
                         {m.verificationStatus === "VERIFIED" && (
-                          <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                          <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600">
                             <Star className="h-3 w-3 fill-emerald-500 text-emerald-500" /> Verified
                           </span>
                         )}

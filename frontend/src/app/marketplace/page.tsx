@@ -27,10 +27,10 @@ const PLATFORM_ICON: Record<string, React.ReactNode> = {
 };
 
 const PLATFORM_COLOR: Record<string, string> = {
-  INSTAGRAM: "bg-pink-50 text-pink-600",
-  YOUTUBE:   "bg-red-50 text-red-600",
+  INSTAGRAM: "bg-pink-500/10 text-pink-600",
+  YOUTUBE:   "bg-red-500/10 text-red-600",
   TIKTOK:    "bg-gray-900 text-white",
-  LINKEDIN:  "bg-blue-50 text-blue-700",
+  LINKEDIN:  "bg-blue-500/10 text-blue-600",
   X:         "bg-gray-100 text-gray-700",
 };
 
@@ -101,10 +101,10 @@ function QuickInviteModal({
         </div>
 
         {sent ? (
-          <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-emerald-500/10 px-4 py-4">
             <Star className="h-5 w-5 text-emerald-500 fill-emerald-500 shrink-0" />
             <div>
-              <p className="text-sm font-semibold text-emerald-700">Invitation sent!</p>
+              <p className="text-sm font-semibold text-emerald-600">Invitation sent!</p>
               <p className="text-xs text-emerald-600">{name} will see it in their inbox.</p>
             </div>
           </div>
@@ -182,7 +182,7 @@ function CreatorCard({
           </div>
           <div className="flex flex-col items-end gap-1">
             {creator.verificationStatus === "VERIFIED" && (
-              <span className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+              <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-600">
                 <Star className="h-3 w-3 fill-green-500 text-green-500" /> Verified
               </span>
             )}

@@ -11,9 +11,9 @@ import { AuthShell } from "@/components/auth-shell";
 import { api, ApiError } from "@/lib/api";
 
 const ROLES = [
-  { value: "CREATOR", label: "Creator", desc: "I create content & collaborate with brands", icon: Sparkles, color: "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-400 hover:bg-violet-50" },
+  { value: "CREATOR", label: "Creator", desc: "I create content & collaborate with brands", icon: Sparkles, color: "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-400 hover:bg-violet-500/10" },
   { value: "BRAND",   label: "Brand",   desc: "I want to run influencer campaigns", icon: Building2, color: "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-400 hover:bg-blue-50" },
-  { value: "AGENCY",  label: "Agency",  desc: "I manage campaigns for multiple brands", icon: Briefcase, color: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400 hover:bg-emerald-50" },
+  { value: "AGENCY",  label: "Agency",  desc: "I manage campaigns for multiple brands", icon: Briefcase, color: "border-emerald-200 bg-emerald-500/10 text-emerald-600 hover:border-emerald-400 hover:bg-emerald-50" },
 ] as const;
 
 const schema = z.object({

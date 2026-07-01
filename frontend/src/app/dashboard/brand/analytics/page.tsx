@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -19,11 +19,11 @@ function fmt(n: number) {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  ACTIVE:    "bg-green-50 text-green-700 border-green-200",
-  DRAFT:     "bg-yellow-50 text-yellow-700 border-yellow-200",
-  PAUSED:    "bg-orange-50 text-orange-700 border-orange-200",
-  COMPLETED: "bg-blue-50 text-blue-700 border-blue-200",
-  CANCELLED: "bg-gray-100 text-gray-500 border-gray-200",
+  ACTIVE:    "bg-emerald-500/10 text-emerald-600",
+  DRAFT:     "bg-yellow-500/10 text-yellow-600",
+  PAUSED:    "bg-orange-500/10 text-orange-600",
+  COMPLETED: "bg-blue-500/10 text-blue-600",
+  CANCELLED: "bg-muted text-muted-foreground",
 };
 
 export default function BrandAnalyticsPage() {
@@ -38,17 +38,17 @@ export default function BrandAnalyticsPage() {
   }, [accessToken]);
 
   const chartData = data?.campaigns.map(c => ({
-    name: c.title.length > 14 ? c.title.slice(0, 14) + "…" : c.title,
+    name: c.title.length > 14 ? c.title.slice(0, 14) + "â€¦" : c.title,
     Reach: c.reach,
     Engagement: c.engagement,
     Conversions: c.conversions,
   })) ?? [];
 
   const kpis = [
-    { icon: DollarSign,   label: "Total Budget",      value: `$${fmt(data?.totals.totalBudget ?? 0)}`,      color: "bg-emerald-50 text-emerald-600" },
-    { icon: Users,        label: "Total Reach",        value: fmt(data?.totals.totalReach ?? 0),             color: "bg-blue-50 text-blue-600" },
-    { icon: TrendingUp,   label: "Total Engagement",   value: fmt(data?.totals.totalEngagement ?? 0),        color: "bg-violet-50 text-violet-600" },
-    { icon: ShoppingCart, label: "Total Conversions",  value: fmt(data?.totals.totalConversions ?? 0),       color: "bg-amber-50 text-amber-600" },
+    { icon: DollarSign,   label: "Total Budget",      value: `$${fmt(data?.totals.totalBudget ?? 0)}`,      color: "bg-emerald-500/10 text-emerald-600" },
+    { icon: Users,        label: "Total Reach",        value: fmt(data?.totals.totalReach ?? 0),             color: "bg-blue-500/10 text-blue-600" },
+    { icon: TrendingUp,   label: "Total Engagement",   value: fmt(data?.totals.totalEngagement ?? 0),        color: "bg-violet-500/10 text-violet-600" },
+    { icon: ShoppingCart, label: "Total Conversions",  value: fmt(data?.totals.totalConversions ?? 0),       color: "bg-amber-500/10 text-amber-500" },
   ];
 
   return (
@@ -87,7 +87,7 @@ export default function BrandAnalyticsPage() {
                   <p className="font-semibold">Performance by campaign</p>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />Reach</span>
-                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-violet-500" />Engagement</span>
+                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-violet-500/100" />Engagement</span>
                     <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-purple-300" />Conversions</span>
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export default function BrandAnalyticsPage() {
                           <span>Engagement: <strong className="text-foreground">{fmt(c.engagement)}</strong></span>
                           <span>Conversions: <strong className="text-foreground">{fmt(c.conversions)}</strong></span>
                           {c.roiEstimate != null && (
-                            <span className="font-semibold text-emerald-600">ROI {c.roiEstimate.toFixed(1)}×</span>
+                            <span className="font-semibold text-emerald-600">ROI {c.roiEstimate.toFixed(1)}Ã—</span>
                           )}
                         </div>
                       </div>

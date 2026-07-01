@@ -58,7 +58,7 @@ function VerifyEmailContent() {
           className="flex flex-col items-center gap-4 py-4 text-center">
           <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 12 }}
-            className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-50 border border-emerald-200">
+            className="flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-500/10 border border-emerald-500/20">
             <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           </motion.div>
           <div>
@@ -79,7 +79,7 @@ function VerifyEmailContent() {
     return (
       <AuthShell title="Verification failed" description="This link may have expired or already been used.">
         <div className="flex flex-col items-center gap-4 py-4 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 border border-red-200">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-500/10 border border-red-500/20">
             <XCircle className="h-7 w-7 text-red-600" />
           </div>
           <p className="text-sm text-destructive">{error}</p>

@@ -23,16 +23,16 @@ function fmt(n: number) {
 }
 
 const INV_STATUS: Record<string, { label: string; icon: React.ElementType; cls: string }> = {
-  PENDING:  { label: "Pending",  icon: Clock,         cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  ACCEPTED: { label: "Accepted", icon: CheckCircle2,  cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  DECLINED: { label: "Declined", icon: XCircle,       cls: "bg-red-50 text-red-700 border-red-200" },
+  PENDING:  { label: "Pending",  icon: Clock,         cls: "bg-amber-500/10 text-amber-600 border-amber-200" },
+  ACCEPTED: { label: "Accepted", icon: CheckCircle2,  cls: "bg-emerald-500/10 text-emerald-600" },
+  DECLINED: { label: "Declined", icon: XCircle,       cls: "bg-red-500/10 text-red-600" },
 };
 
 const PROP_STATUS: Record<string, { label: string; cls: string }> = {
-  PENDING:   { label: "Under review", cls: "bg-amber-50 text-amber-700" },
-  ACCEPTED:  { label: "Accepted",     cls: "bg-emerald-50 text-emerald-700" },
-  REJECTED:  { label: "Rejected",     cls: "bg-red-50 text-red-700" },
-  WITHDRAWN: { label: "Withdrawn",    cls: "bg-gray-100 text-gray-500" },
+  PENDING:   { label: "Under review", cls: "bg-amber-500/10 text-amber-600" },
+  ACCEPTED:  { label: "Accepted",     cls: "bg-emerald-500/10 text-emerald-600" },
+  REJECTED:  { label: "Rejected",     cls: "bg-red-500/10 text-red-600" },
+  WITHDRAWN: { label: "Withdrawn",    cls: "bg-muted text-muted-foreground" },
 };
 
 const fadeUp = {
@@ -108,9 +108,9 @@ export default function CreatorDashboardPage() {
           {/* Quick actions */}
           <motion.div variants={fadeUp} custom={5} className="mb-6 grid gap-3 sm:grid-cols-3">
             {[
-              { href: "/dashboard/creator/profile", icon: User, label: "Update profile", desc: "Keep your profile fresh for brands", color: "text-violet-600 bg-violet-50" },
-              { href: "/marketplace", icon: Megaphone, label: "Browse campaigns", desc: "Find campaigns to apply for", color: "text-blue-600 bg-blue-50" },
-              { href: "/messages", icon: MessageSquare, label: "Messages", desc: "Check your brand conversations", color: "text-indigo-600 bg-indigo-50" },
+              { href: "/dashboard/creator/profile", icon: User, label: "Update profile", desc: "Keep your profile fresh for brands", color: "text-violet-500 bg-violet-500/10" },
+              { href: "/marketplace", icon: Megaphone, label: "Browse campaigns", desc: "Find campaigns to apply for", color: "text-blue-500 bg-blue-500/10" },
+              { href: "/messages", icon: MessageSquare, label: "Messages", desc: "Check your brand conversations", color: "text-indigo-500 bg-indigo-500/10" },
             ].map(a => (
               <Link key={a.href} href={a.href}>
                 <div className="card-hover flex items-center gap-3 rounded-2xl border bg-card p-4 cursor-pointer">

@@ -70,7 +70,7 @@ export default function BrandProfilePage() {
       <div className="mx-auto max-w-2xl">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 border border-blue-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-500/10 border border-blue-500/20">
               <Building2 className="h-5 w-5 text-blue-600" />
             </div>
             <div>
@@ -88,7 +88,7 @@ export default function BrandProfilePage() {
         )}
         {saved && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm font-medium text-emerald-800">
+            className="mb-5 flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-3 text-sm font-medium text-emerald-600">
             <CheckCircle2 className="h-4 w-4" /> Profile saved — redirecting to dashboard…
           </motion.div>
         )}

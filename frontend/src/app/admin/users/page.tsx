@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth-store";
@@ -56,7 +56,7 @@ export default function AdminUsersPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") { setPage(1); load(); } }}
-            placeholder="Search by email or name…"
+            placeholder="Search by email or nameâ€¦"
             className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
@@ -73,7 +73,7 @@ export default function AdminUsersPage() {
 
       <div className="overflow-hidden rounded-2xl border bg-card">
         {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">Loadingâ€¦</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
               {users.map(u => (
                 <tr key={u.id} className="hover:bg-muted/20 transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{u.profile?.displayName ?? "—"}</p>
+                    <p className="font-medium">{u.profile?.displayName ?? "â€”"}</p>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </td>
                   <td className="px-4 py-3">
@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="px-4 py-3">
                     <button onClick={() => deleteUser(u.id, u.email)}
-                      className="rounded-lg p-1.5 text-red-500 hover:bg-red-50 transition-colors">
+                      className="rounded-lg p-1.5 text-red-500 hover:bg-red-500/10 transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </td>

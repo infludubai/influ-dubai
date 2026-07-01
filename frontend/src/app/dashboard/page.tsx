@@ -63,17 +63,17 @@ export default function DashboardPage() {
         {/* Email verification banner */}
         {status === "PENDING_VERIFICATION" && (
           <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-8 w-full rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-left">
+            className="mb-8 w-full rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-4 text-left">
             <div className="flex items-start gap-3">
               <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="flex-1">
-                <p className="text-sm font-semibold text-amber-800">Verify your email</p>
+                <p className="text-sm font-semibold text-amber-700">Verify your email</p>
                 <p className="mt-0.5 text-xs text-amber-700">Check your inbox for a verification link. Some features are limited until verified.</p>
               </div>
               <button
                 disabled={resent}
                 onClick={async () => { await api.resendVerification(user.email); setResent(true); }}
-                className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-800 hover:bg-amber-50 disabled:opacity-60 transition-colors"
+                className="shrink-0 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-700 hover:bg-amber-500/10 disabled:opacity-60 transition-colors"
               >
                 {resent ? "Sent ✓" : "Resend"}
               </button>

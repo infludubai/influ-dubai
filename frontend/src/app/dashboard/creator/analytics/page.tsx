@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -43,10 +43,10 @@ export default function CreatorAnalyticsPage() {
   }));
 
   const kpis = [
-    { icon: Users,        label: "Total Reach",       value: fmt(data?.totals.totalReach ?? 0),       color: "bg-blue-50 text-blue-600" },
-    { icon: TrendingUp,   label: "Total Engagement",  value: fmt(data?.totals.totalEngagement ?? 0),   color: "bg-violet-50 text-violet-600" },
-    { icon: ShoppingCart, label: "Total Conversions", value: fmt(data?.totals.totalConversions ?? 0),  color: "bg-amber-50 text-amber-600" },
-    { icon: DollarSign,   label: "Campaigns",         value: String(data?.campaigns.length ?? 0),      color: "bg-emerald-50 text-emerald-600" },
+    { icon: Users,        label: "Total Reach",       value: fmt(data?.totals.totalReach ?? 0),       color: "bg-blue-500/10 text-blue-600" },
+    { icon: TrendingUp,   label: "Total Engagement",  value: fmt(data?.totals.totalEngagement ?? 0),   color: "bg-violet-500/10 text-violet-600" },
+    { icon: ShoppingCart, label: "Total Conversions", value: fmt(data?.totals.totalConversions ?? 0),  color: "bg-amber-500/10 text-amber-500" },
+    { icon: DollarSign,   label: "Campaigns",         value: String(data?.campaigns.length ?? 0),      color: "bg-emerald-500/10 text-emerald-600" },
   ];
 
   return (
@@ -130,7 +130,7 @@ export default function CreatorAnalyticsPage() {
                 <div className="py-16 text-center">
                   <BarChart3 className="mx-auto mb-3 h-10 w-10 opacity-20" />
                   <p className="text-muted-foreground text-sm">No accepted campaigns yet.</p>
-                  <Link href="/marketplace" className="mt-2 inline-block text-sm text-primary hover:underline">Browse campaigns →</Link>
+                  <Link href="/marketplace" className="mt-2 inline-block text-sm text-primary hover:underline">Browse campaigns â†’</Link>
                 </div>
               ) : (
                 <div className="divide-y">

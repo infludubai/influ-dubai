@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/lib/auth-store";
@@ -8,9 +8,9 @@ import { MessageSquare, Mail, FileText } from "lucide-react";
 type LogEntry = { type: string; at: string; detail: string };
 
 const TYPE_META: Record<string, { icon: React.ReactNode; color: string }> = {
-  MESSAGE:    { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "bg-blue-50 text-blue-700" },
-  INVITATION: { icon: <Mail className="h-3.5 w-3.5" />,         color: "bg-purple-50 text-purple-700" },
-  PROPOSAL:   { icon: <FileText className="h-3.5 w-3.5" />,     color: "bg-green-50 text-green-700" },
+  MESSAGE:    { icon: <MessageSquare className="h-3.5 w-3.5" />, color: "bg-blue-500/10 text-blue-600" },
+  INVITATION: { icon: <Mail className="h-3.5 w-3.5" />,         color: "bg-purple-500/10 text-purple-600" },
+  PROPOSAL:   { icon: <FileText className="h-3.5 w-3.5" />,     color: "bg-emerald-500/10 text-emerald-600" },
 };
 
 export default function AdminLogsPage() {
@@ -31,7 +31,7 @@ export default function AdminLogsPage() {
 
       <div className="rounded-2xl border bg-card">
         {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">Loadingâ€¦</div>
         ) : !log.length ? (
           <div className="py-16 text-center text-sm text-muted-foreground">No activity yet</div>
         ) : (

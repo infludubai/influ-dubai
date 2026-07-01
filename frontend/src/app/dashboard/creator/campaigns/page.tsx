@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,8 +18,8 @@ const TYPE_LABEL: Record<string, string> = {
   AWARENESS: "Awareness", ENGAGEMENT: "Engagement", LEAD_GENERATION: "Lead Gen", SALES: "Sales",
 };
 const TYPE_COLOR: Record<string, string> = {
-  AWARENESS: "bg-blue-50 text-blue-700", ENGAGEMENT: "bg-violet-50 text-violet-700",
-  LEAD_GENERATION: "bg-emerald-50 text-emerald-700", SALES: "bg-amber-50 text-amber-700",
+  AWARENESS: "bg-blue-500/10 text-blue-600", ENGAGEMENT: "bg-violet-500/10 text-violet-600",
+  LEAD_GENERATION: "bg-emerald-500/10 text-emerald-600", SALES: "bg-amber-500/10 text-amber-600",
 };
 
 function fmt(n: number) {
@@ -28,7 +28,7 @@ function fmt(n: number) {
   return n.toString();
 }
 
-// ── Proposal modal ─────────────────────────────────────────────────────────────
+// â”€â”€ Proposal modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function ProposalModal({
   campaign,
   onClose,
@@ -75,7 +75,7 @@ function ProposalModal({
           <div>
             <p className="font-bold">Submit a proposal</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {campaign.title} · <span className="font-medium text-foreground">{campaign.brand.companyName}</span>
+              {campaign.title} Â· <span className="font-medium text-foreground">{campaign.brand.companyName}</span>
             </p>
           </div>
           <button onClick={onClose} className="rounded-xl p-1.5 hover:bg-muted transition-colors shrink-0">
@@ -117,7 +117,7 @@ function ProposalModal({
               value={coverLetter}
               onChange={e => setCoverLetter(e.target.value)}
               rows={5}
-              placeholder={`Tell ${campaign.brand.companyName} why you're the perfect creator for this campaign. Mention your relevant experience, audience, and content style…`}
+              placeholder={`Tell ${campaign.brand.companyName} why you're the perfect creator for this campaign. Mention your relevant experience, audience, and content styleâ€¦`}
               className="w-full resize-none rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:border-primary transition-colors"
             />
             <p className="mt-1 text-xs text-muted-foreground">{coverLetter.length} characters</p>
@@ -145,7 +145,7 @@ function ProposalModal({
             disabled={sending || !coverLetter.trim()}
             className="gradient-brand flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold text-white disabled:opacity-50 hover:opacity-90 transition-all"
           >
-            {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : <><Send className="h-4 w-4" /> Submit proposal</>}
+            {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sendingâ€¦</> : <><Send className="h-4 w-4" /> Submit proposal</>}
           </button>
           <button onClick={onClose} className="rounded-2xl border px-5 py-3 text-sm hover:bg-muted transition-colors">
             Cancel
@@ -156,7 +156,7 @@ function ProposalModal({
   );
 }
 
-// ── Main page ──────────────────────────────────────────────────────────────────
+// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function CreatorCampaignsPage() {
   const { accessToken, user } = useAuthStore();
   const router = useRouter();
@@ -238,7 +238,7 @@ export default function CreatorCampaignsPage() {
           <div className="rounded-2xl border bg-muted/20 py-24 text-center">
             <Megaphone className="mx-auto mb-4 h-12 w-12 opacity-20" />
             <p className="text-lg font-semibold">No active campaigns right now</p>
-            <p className="text-sm text-muted-foreground">Check back soon — new campaigns are posted regularly.</p>
+            <p className="text-sm text-muted-foreground">Check back soon â€” new campaigns are posted regularly.</p>
           </div>
         ) : (
           <motion.div
@@ -313,7 +313,7 @@ export default function CreatorCampaignsPage() {
                   {/* Action */}
                   <div className="border-t p-3">
                     {alreadyApplied ? (
-                      <div className="flex items-center justify-center gap-2 rounded-xl bg-emerald-50 py-2.5 text-sm font-medium text-emerald-700">
+                      <div className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 py-2.5 text-sm font-medium text-emerald-700">
                         <CheckCircle2 className="h-4 w-4" /> Proposal sent
                       </div>
                     ) : (

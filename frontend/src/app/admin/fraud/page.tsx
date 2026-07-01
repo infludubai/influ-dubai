@@ -60,9 +60,9 @@ export default function AdminFraudPage() {
         {/* Scan result banner */}
         {scanResult && (
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+            className="mb-6 flex items-center gap-3 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4">
             <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />
-            <p className="text-sm font-medium text-emerald-800">
+            <p className="text-sm font-medium text-emerald-600">
               Scan complete — analyzed {scanResult.scanned} creators, flagged {scanResult.flagged} with Medium or High risk.
             </p>
           </motion.div>
@@ -77,10 +77,10 @@ export default function AdminFraudPage() {
             {/* KPI cards */}
             <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Analyzed", value: stats?.analyzed ?? 0, icon: ShieldCheck, color: "text-blue-600 bg-blue-50" },
-                { label: "High Risk", value: stats?.high ?? 0, icon: ShieldX, color: "text-red-600 bg-red-50" },
-                { label: "Medium Risk", value: stats?.medium ?? 0, icon: ShieldAlert, color: "text-amber-600 bg-amber-50" },
-                { label: "Low Risk", value: stats?.low ?? 0, icon: ShieldCheck, color: "text-emerald-600 bg-emerald-50" },
+                { label: "Analyzed", value: stats?.analyzed ?? 0, icon: ShieldCheck, color: "text-blue-500 bg-blue-500/10" },
+                { label: "High Risk", value: stats?.high ?? 0, icon: ShieldX, color: "text-red-600 bg-red-500/10" },
+                { label: "Medium Risk", value: stats?.medium ?? 0, icon: ShieldAlert, color: "text-amber-600 bg-amber-500/10" },
+                { label: "Low Risk", value: stats?.low ?? 0, icon: ShieldCheck, color: "text-emerald-600 bg-emerald-500/10" },
               ].map((c, i) => (
                 <motion.div key={c.label} variants={fadeUp} custom={i + 1}
                   className="rounded-2xl border bg-card p-5">
@@ -99,8 +99,8 @@ export default function AdminFraudPage() {
                 <p className="mb-3 text-sm font-semibold">Risk distribution</p>
                 <div className="flex h-4 w-full overflow-hidden rounded-full bg-muted">
                   {[
-                    { val: stats.high, color: "bg-red-500" },
-                    { val: stats.medium, color: "bg-amber-500" },
+                    { val: stats.high, color: "bg-red-500/100" },
+                    { val: stats.medium, color: "bg-amber-500/100" },
                     { val: stats.low, color: "bg-emerald-500" },
                   ].map((s, i) => (
                     <div key={i} className={`${s.color} transition-all`}
@@ -108,8 +108,8 @@ export default function AdminFraudPage() {
                   ))}
                 </div>
                 <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" />High ({stats.high})</span>
-                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500" />Medium ({stats.medium})</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500/100" />High ({stats.high})</span>
+                  <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-500/100" />Medium ({stats.medium})</span>
                   <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Low ({stats.low})</span>
                 </div>
               </motion.div>

@@ -17,10 +17,10 @@ const PLATFORM_LABELS: Record<string, string> = {
   INSTAGRAM: "Instagram", TIKTOK: "TikTok", YOUTUBE: "YouTube", LINKEDIN: "LinkedIn", X: "X (Twitter)",
 };
 const PLATFORM_COLORS: Record<string, string> = {
-  INSTAGRAM: "bg-pink-50 text-pink-700 border-pink-200",
+  INSTAGRAM: "bg-pink-500/10 text-pink-600",
   TIKTOK: "bg-gray-900 text-white border-gray-700",
-  YOUTUBE: "bg-red-50 text-red-700 border-red-200",
-  LINKEDIN: "bg-blue-50 text-blue-700 border-blue-200",
+  YOUTUBE: "bg-red-500/10 text-red-600",
+  LINKEDIN: "bg-blue-500/10 text-blue-600",
   X: "bg-gray-50 text-gray-700 border-gray-200",
 };
 const CATEGORY_OPTIONS = [
@@ -160,7 +160,7 @@ export default function CreatorProfilePage() {
     setList(list.includes(item) ? list.filter(i => i !== item) : [...list, item]);
   }
 
-  const scoreColor = score >= 80 ? "bg-emerald-500" : score >= 50 ? "bg-amber-500" : "bg-red-400";
+  const scoreColor = score >= 80 ? "bg-emerald-500/100" : score >= 50 ? "bg-amber-500" : "bg-red-400";
 
   if (!accessToken || !user) return null;
 
@@ -207,7 +207,7 @@ export default function CreatorProfilePage() {
 
           {saved && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-              className="mb-4 flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+              className="mb-4 flex items-center gap-2 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-600">
               <CheckCircle2 className="h-4 w-4" /> Profile saved successfully
             </motion.div>
           )}

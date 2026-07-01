@@ -146,10 +146,10 @@ export default function CampaignAnalyticsPage() {
         {/* KPI cards */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, transition: { delay: 0.05 } }}
           className="mb-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={<Users className="h-5 w-5" />}            label="Total Reach"   value={fmt(data?.totals.reach ?? 0)}      color="bg-blue-50 text-blue-600" />
-          <StatCard icon={<TrendingUp className="h-5 w-5" />}       label="Engagement"    value={fmt(data?.totals.engagement ?? 0)}  sub={`${(data?.engagementRate ?? 0).toFixed(1)}% rate`} color="bg-violet-50 text-violet-600" />
-          <StatCard icon={<MousePointerClick className="h-5 w-5" />} label="Clicks"        value={fmt(data?.totals.clicks ?? 0)}      sub={`${(data?.ctr ?? 0).toFixed(2)}% CTR`}           color="bg-indigo-50 text-indigo-600" />
-          <StatCard icon={<ShoppingCart className="h-5 w-5" />}     label="Conversions"   value={fmt(data?.totals.conversions ?? 0)} color="bg-amber-50 text-amber-600" />
+          <StatCard icon={<Users className="h-5 w-5" />}            label="Total Reach"   value={fmt(data?.totals.reach ?? 0)}      color="bg-blue-500/10 text-blue-600" />
+          <StatCard icon={<TrendingUp className="h-5 w-5" />}       label="Engagement"    value={fmt(data?.totals.engagement ?? 0)}  sub={`${(data?.engagementRate ?? 0).toFixed(1)}% rate`} color="bg-violet-500/10 text-violet-600" />
+          <StatCard icon={<MousePointerClick className="h-5 w-5" />} label="Clicks"        value={fmt(data?.totals.clicks ?? 0)}      sub={`${(data?.ctr ?? 0).toFixed(2)}% CTR`}           color="bg-indigo-500/10 text-indigo-600" />
+          <StatCard icon={<ShoppingCart className="h-5 w-5" />}     label="Conversions"   value={fmt(data?.totals.conversions ?? 0)} color="bg-amber-500/10 text-amber-600" />
         </motion.div>
 
         {/* ROI + CPE highlight */}
@@ -157,12 +157,12 @@ export default function CampaignAnalyticsPage() {
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
             className="mb-5 grid gap-4 sm:grid-cols-2">
             {data.roiEstimate != null && (
-              <div className="flex items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
+              <div className="flex items-center gap-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-5">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
                   <TrendingUp className="h-6 w-6 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-emerald-700">{data.roiEstimate.toFixed(2)}×</p>
+                  <p className="text-2xl font-bold text-emerald-600">{data.roiEstimate.toFixed(2)}×</p>
                   <p className="text-sm font-medium text-emerald-600">Estimated ROI</p>
                 </div>
               </div>

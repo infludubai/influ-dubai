@@ -47,7 +47,7 @@ export default function ForgotPasswordPage() {
         {submitted ? (
           <motion.div key="done" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center gap-4 py-4 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 border border-emerald-200">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
               <CheckCircle2 className="h-7 w-7 text-emerald-600" />
             </div>
             <div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -13,11 +13,11 @@ type Invitation = Awaited<ReturnType<typeof api.getMyInvitations>>[number];
 type Proposal = Awaited<ReturnType<typeof api.getMyProposals>>[number];
 
 const STATUS_STYLE: Record<string, string> = {
-  PENDING:   "bg-yellow-50 text-yellow-700 border-yellow-200",
-  ACCEPTED:  "bg-green-50 text-green-700 border-green-200",
-  DECLINED:  "bg-red-50 text-red-700 border-red-200",
-  REJECTED:  "bg-red-50 text-red-700 border-red-200",
-  WITHDRAWN: "bg-gray-100 text-gray-500 border-gray-200",
+  PENDING:   "bg-yellow-500/10 text-yellow-600",
+  ACCEPTED:  "bg-emerald-500/10 text-emerald-600",
+  DECLINED:  "bg-red-500/10 text-red-600",
+  REJECTED:  "bg-red-500/10 text-red-600",
+  WITHDRAWN: "bg-muted text-muted-foreground",
 };
 
 export default function CreatorInboxPage() {
@@ -99,7 +99,7 @@ export default function CreatorInboxPage() {
                         <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[inv.status]}`}>{inv.status}</span>
                       </div>
                       <p className="mt-0.5 text-sm text-muted-foreground">
-                        {inv.campaign.brand?.companyName ?? "Brand"} · <span className="font-medium text-foreground">${inv.campaign.budgetUsd?.toLocaleString()}</span> budget
+                        {inv.campaign.brand?.companyName ?? "Brand"} Â· <span className="font-medium text-foreground">${inv.campaign.budgetUsd?.toLocaleString()}</span> budget
                       </p>
                       {inv.message && (
                         <p className="mt-2 rounded-xl bg-muted/50 px-3 py-2 text-sm text-muted-foreground italic">"{inv.message}"</p>
@@ -108,7 +108,7 @@ export default function CreatorInboxPage() {
                     {inv.status === "PENDING" && (
                       <div className="flex shrink-0 gap-2">
                         <button onClick={() => respond(inv.id, "DECLINED")}
-                          className="flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">
+                          className="flex items-center gap-1.5 rounded-xl border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-500/10 transition-colors">
                           <XCircle className="h-3.5 w-3.5" /> Decline
                         </button>
                         <button onClick={() => respond(inv.id, "ACCEPTED")}
@@ -125,7 +125,7 @@ export default function CreatorInboxPage() {
         ) : (
           proposals.length === 0 ? (
             <Empty icon={<Send className="h-10 w-10" />} text="No proposals sent"
-              sub={<>Browse campaigns and submit your first proposal. <Link href="/marketplace" className="text-primary hover:underline">Explore marketplace →</Link></>} />
+              sub={<>Browse campaigns and submit your first proposal. <Link href="/marketplace" className="text-primary hover:underline">Explore marketplace â†’</Link></>} />
           ) : (
             <div className="space-y-3">
               {proposals.map((p, i) => (

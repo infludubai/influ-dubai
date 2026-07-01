@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,10 +12,10 @@ import { DashboardShell } from "@/components/DashboardShell";
 type Proposal = Awaited<ReturnType<typeof api.getCampaignProposals>>[number];
 
 const STATUS_STYLE: Record<string, string> = {
-  PENDING:   "bg-yellow-50 text-yellow-700 border-yellow-200",
-  ACCEPTED:  "bg-green-50 text-green-700 border-green-200",
-  REJECTED:  "bg-red-50 text-red-700 border-red-200",
-  WITHDRAWN: "bg-gray-100 text-gray-500 border-gray-200",
+  PENDING:   "bg-yellow-500/10 text-yellow-600",
+  ACCEPTED:  "bg-emerald-500/10 text-emerald-600",
+  REJECTED:  "bg-red-500/10 text-red-600",
+  WITHDRAWN: "bg-muted text-muted-foreground",
 };
 
 export default function BrandInboxPage() {
@@ -62,8 +62,8 @@ export default function BrandInboxPage() {
 
         {pendingCount > 0 && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-5 flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-3 text-sm text-amber-800">
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">{pendingCount}</span>
+            className="mb-5 flex items-center gap-2 rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-3 text-sm text-amber-700">
+            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/100 text-[10px] font-bold text-white">{pendingCount}</span>
             {pendingCount === 1 ? "1 proposal needs your response" : `${pendingCount} proposals need your response`}
           </motion.div>
         )}
@@ -108,7 +108,7 @@ export default function BrandInboxPage() {
                     {p.status === "PENDING" && (
                       <div className="flex shrink-0 flex-col gap-1.5 sm:flex-row">
                         <button onClick={() => respond(p.id, "REJECTED")}
-                          className="flex items-center gap-1 rounded-xl border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors">
+                          className="flex items-center gap-1 rounded-xl border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-500/10 transition-colors">
                           <XCircle className="h-3.5 w-3.5" /> Reject
                         </button>
                         <button onClick={() => respond(p.id, "ACCEPTED")}
