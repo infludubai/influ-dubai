@@ -160,7 +160,7 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-hero pt-20 pb-28">
+      <section className="relative overflow-hidden bg-hero pt-16 pb-16">
         <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-50" />
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -left-64 top-0 h-[600px] w-[600px] rounded-full bg-violet-400/8 blur-3xl" />
@@ -222,7 +222,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-2xl mx-auto"
+            className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4 max-w-2xl mx-auto"
           >
             {STATS.map((s) => (
               <div key={s.label} className="rounded-2xl border border-zinc-100 bg-white px-4 py-5 text-center shadow-sm">
@@ -251,9 +251,9 @@ export default function HomePage() {
       </section>
 
       {/* ── Features ── */}
-      <section className="py-28 bg-white">
+      <section className="py-16 bg-white">
         <div className="container mx-auto max-w-7xl px-6">
-          <Section className="mb-16 text-center">
+          <Section className="mb-10 text-center">
             <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-600">
               Platform capabilities
             </motion.p>
@@ -286,9 +286,9 @@ export default function HomePage() {
       </section>
 
       {/* ── How it works ── */}
-      <section className="py-28 bg-zinc-50">
+      <section className="py-16 bg-zinc-50">
         <div className="container mx-auto max-w-7xl px-6">
-          <Section className="mb-16 text-center">
+          <Section className="mb-10 text-center">
             <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-600">
               Simple by design
             </motion.p>
@@ -318,9 +318,9 @@ export default function HomePage() {
       </section>
 
       {/* ── Social proof ── */}
-      <section className="py-28 bg-white">
+      <section className="py-16 bg-white">
         <div className="container mx-auto max-w-7xl px-6">
-          <Section className="mb-16 text-center">
+          <Section className="mb-10 text-center">
             <motion.p variants={fadeUp} className="mb-3 text-sm font-semibold uppercase tracking-widest text-violet-600">
               Trusted by leaders
             </motion.p>
@@ -371,7 +371,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="relative overflow-hidden bg-auth-gradient py-28">
+      <section className="relative overflow-hidden bg-auth-gradient py-16">
         <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-10" />
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -right-32 -top-32 h-[500px] w-[500px] rounded-full bg-white/5 blur-3xl" />
