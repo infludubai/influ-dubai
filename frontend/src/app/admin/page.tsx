@@ -24,13 +24,13 @@ export default function AdminOverviewPage() {
   }, [accessToken]);
 
   const cards = stats ? [
-    { label: "Total Users",       value: stats.totalUsers,       icon: Users,         color: "text-blue-600 bg-blue-50" },
-    { label: "Creators",          value: stats.totalCreators,    icon: UserCheck,      color: "text-green-600 bg-green-50" },
-    { label: "Brands",            value: stats.totalBrands,      icon: TrendingUp,     color: "text-purple-600 bg-purple-50" },
-    { label: "Total Campaigns",   value: stats.totalCampaigns,   icon: Megaphone,      color: "text-orange-600 bg-orange-50" },
-    { label: "Active Campaigns",  value: stats.activeCampaigns,  icon: Megaphone,      color: "text-emerald-600 bg-emerald-50" },
-    { label: "Total Messages",    value: stats.totalMessages,    icon: MessageSquare,  color: "text-pink-600 bg-pink-50" },
-    { label: "Platform Revenue",  value: `$${stats.totalRevenueUsd.toFixed(2)}`, icon: DollarSign, color: "text-yellow-600 bg-yellow-50" },
+    { label: "Total Users",       value: stats.totalUsers,       icon: Users,         color: "text-blue-500 bg-blue-500/10" },
+    { label: "Creators",          value: stats.totalCreators,    icon: UserCheck,      color: "text-emerald-500 bg-emerald-500/10" },
+    { label: "Brands",            value: stats.totalBrands,      icon: TrendingUp,     color: "text-violet-500 bg-violet-500/10" },
+    { label: "Total Campaigns",   value: stats.totalCampaigns,   icon: Megaphone,      color: "text-orange-500 bg-orange-500/10" },
+    { label: "Active Campaigns",  value: stats.activeCampaigns,  icon: Megaphone,      color: "text-green-500 bg-green-500/10" },
+    { label: "Total Messages",    value: stats.totalMessages,    icon: MessageSquare,  color: "text-pink-500 bg-pink-500/10" },
+    { label: "Platform Revenue",  value: `$${stats.totalRevenueUsd.toFixed(2)}`, icon: DollarSign, color: "text-amber-500 bg-amber-500/10" },
   ] : [];
 
   return (

@@ -10,6 +10,7 @@ import {
   LayoutDashboard, Users, Megaphone, DollarSign, FileText, LogOut,
   Sparkles, ShieldCheck, Menu, X, ChevronRight,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
@@ -62,11 +63,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Admin badge */}
-      <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-rose-50 px-3 py-2.5 border border-rose-100">
-        <ShieldCheck className="h-4 w-4 text-rose-600 shrink-0" />
+      <div className="mb-4 flex items-center gap-2.5 rounded-xl bg-rose-500/10 px-3 py-2.5 border border-rose-500/20">
+        <ShieldCheck className="h-4 w-4 text-rose-500 shrink-0" />
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-rose-700">Admin Panel</p>
-          <p className="text-xs text-rose-500 truncate">{user.email}</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-rose-500">Admin Panel</p>
+          <p className="text-xs text-rose-400 truncate">{user.email}</p>
         </div>
       </div>
 
@@ -140,9 +141,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <ShieldCheck className="h-4 w-4 text-rose-500" />
             <span className="text-sm font-semibold">Admin Control Center</span>
           </div>
-          <Link href="/dashboard" className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors">
-            ← Back to app
-          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle />
+            <Link href="/dashboard" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              ← Back to app
+            </Link>
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto scrollbar-thin">

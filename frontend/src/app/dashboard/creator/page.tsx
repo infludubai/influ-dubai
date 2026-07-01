@@ -68,8 +68,7 @@ export default function CreatorDashboardPage() {
 
   return (
     <DashboardShell>
-      <div className="p-8">
-        <motion.div initial="hidden" animate="visible"
+      <motion.div initial="hidden" animate="visible"
           variants={{ visible: { transition: { staggerChildren: 0.07 } } }}>
 
           {/* Header */}
@@ -89,10 +88,10 @@ export default function CreatorDashboardPage() {
           ) : (
             <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Total Reach", value: fmt(analytics?.totals.totalReach ?? 0), icon: Users, color: "bg-blue-50 text-blue-600" },
-                { label: "Total Engagement", value: fmt(analytics?.totals.totalEngagement ?? 0), icon: TrendingUp, color: "bg-violet-50 text-violet-600" },
-                { label: "Pending Invites", value: pendingInvites.length, icon: Mail, color: "bg-amber-50 text-amber-600" },
-                { label: "Accepted Deals", value: acceptedProposals.length, icon: CheckCircle2, color: "bg-emerald-50 text-emerald-600" },
+                { label: "Total Reach", value: fmt(analytics?.totals.totalReach ?? 0), icon: Users, color: "bg-blue-500/10 text-blue-500" },
+                { label: "Total Engagement", value: fmt(analytics?.totals.totalEngagement ?? 0), icon: TrendingUp, color: "bg-violet-500/10 text-violet-500" },
+                { label: "Pending Invites", value: pendingInvites.length, icon: Mail, color: "bg-amber-500/10 text-amber-500" },
+                { label: "Accepted Deals", value: acceptedProposals.length, icon: CheckCircle2, color: "bg-emerald-500/10 text-emerald-500" },
               ].map((card, i) => (
                 <motion.div key={card.label} variants={fadeUp} custom={i + 1}
                   className="card-hover rounded-2xl border bg-card p-5">
@@ -214,10 +213,10 @@ export default function CreatorDashboardPage() {
           {/* Analytics teaser */}
           {(analytics?.totals.totalReach ?? 0) > 0 && (
             <motion.div variants={fadeUp} custom={8}
-              className="mt-6 flex items-center justify-between rounded-2xl border border-violet-200 bg-violet-50/50 px-6 py-5">
+              className="mt-6 flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 px-6 py-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100">
-                  <BarChart3 className="h-5 w-5 text-violet-600" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
+                  <BarChart3 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="font-semibold text-sm">You've reached {fmt(analytics!.totals.totalReach)} people</p>
@@ -225,14 +224,13 @@ export default function CreatorDashboardPage() {
                 </div>
               </div>
               <Link href="/dashboard/creator/analytics">
-                <button className="flex items-center gap-2 rounded-xl border border-violet-200 bg-white px-4 py-2 text-sm font-medium hover:bg-violet-50 transition-all">
-                  <Sparkles className="h-3.5 w-3.5 text-violet-600" /> View analytics
+                <button className="flex items-center gap-2 rounded-xl border bg-card px-4 py-2 text-sm font-medium hover:bg-muted transition-all">
+                  <Sparkles className="h-3.5 w-3.5 text-primary" /> View analytics
                 </button>
               </Link>
             </motion.div>
           )}
-        </motion.div>
-      </div>
+      </motion.div>
     </DashboardShell>
   );
 }

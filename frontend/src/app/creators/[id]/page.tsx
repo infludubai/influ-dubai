@@ -11,6 +11,7 @@ import {
 import { api, type CreatorProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { FraudBadge, FraudScoreRing } from "@/components/FraudBadge";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const PLATFORM_LABELS: Record<string, string> = {
   INSTAGRAM: "Instagram", TIKTOK: "TikTok", YOUTUBE: "YouTube", LINKEDIN: "LinkedIn", X: "X (Twitter)",
@@ -135,6 +136,7 @@ export default function PublicCreatorProfilePage() {
             <span className="text-base font-bold">InfluDubai <span className="gradient-text">AI</span></span>
           </Link>
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             <Link href="/marketplace">
               <button className="rounded-xl px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
                 Marketplace
@@ -206,12 +208,12 @@ export default function PublicCreatorProfilePage() {
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-2xl font-bold">{displayName}</h1>
               {profile.verificationStatus === "VERIFIED" && (
-                <span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  <Star className="h-3 w-3 fill-emerald-500 text-emerald-500" /> Verified
+                <span className="badge-active flex items-center gap-1">
+                  <Star className="h-3 w-3 fill-current" /> Verified
                 </span>
               )}
               {profile.verificationStatus === "PENDING" && (
-                <span className="rounded-full bg-yellow-50 px-2.5 py-1 text-xs font-medium text-yellow-700">Pending</span>
+                <span className="badge-pending">Pending</span>
               )}
               {profile.fraudRiskLevel && (
                 <FraudBadge level={profile.fraudRiskLevel} score={profile.fraudRiskScore} size="sm" />
@@ -243,7 +245,7 @@ export default function PublicCreatorProfilePage() {
                 </button>
               </div>
               {inviteSent ? (
-                <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-4 text-sm font-medium text-emerald-700">
+                <div className="flex items-center gap-3 rounded-2xl bg-emerald-500/10 px-4 py-4 text-sm font-medium text-emerald-600">
                   <Star className="h-5 w-5 fill-emerald-500 text-emerald-500" />
                   Invitation sent! {displayName} will see it in their inbox.
                 </div>

@@ -3,7 +3,7 @@ import { Sparkles, ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-hero-mesh px-6 text-center">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6 text-center">
       <Link href="/" className="mb-10 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand shadow-md">
           <Sparkles className="h-4 w-4 text-white" />

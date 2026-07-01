@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, MessageSquare, ArrowLeft, Sparkles } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import { api } from "@/lib/api";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { io, Socket } from "socket.io-client";
 
 type Conversation = Awaited<ReturnType<typeof api.listConversations>>[number];
@@ -123,11 +124,14 @@ export default function MessagesPage() {
           </div>
           <span className="text-base font-bold">InfluDubai <span className="gradient-text">AI</span></span>
         </Link>
-        <Link href="/dashboard">
-          <button className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
-            <ArrowLeft className="h-3.5 w-3.5" /> Dashboard
-          </button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Link href="/dashboard">
+            <button className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+              <ArrowLeft className="h-3.5 w-3.5" /> Dashboard
+            </button>
+          </Link>
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">

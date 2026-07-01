@@ -112,10 +112,10 @@ export default function BrandDashboardPage() {
         {/* KPI cards */}
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Megaphone, label: "Total Campaigns", value: campaigns.length, color: "text-blue-600 bg-blue-50", delta: null },
-            { icon: TrendingUp, label: "Active", value: active, color: "text-emerald-600 bg-emerald-50", delta: null },
-            { icon: BarChart3, label: "In Draft", value: draft, color: "text-amber-600 bg-amber-50", delta: null },
-            { icon: Users, label: "Total Budget", value: `$${totalBudget.toLocaleString()}`, color: "text-purple-600 bg-purple-50", delta: null },
+            { icon: Megaphone, label: "Total Campaigns", value: campaigns.length, color: "text-blue-500 bg-blue-500/10", delta: null },
+            { icon: TrendingUp, label: "Active", value: active, color: "text-emerald-500 bg-emerald-500/10", delta: null },
+            { icon: BarChart3, label: "In Draft", value: draft, color: "text-amber-500 bg-amber-500/10", delta: null },
+            { icon: Users, label: "Total Budget", value: `$${totalBudget.toLocaleString()}`, color: "text-violet-500 bg-violet-500/10", delta: null },
           ].map((s, i) => (
             <motion.div key={s.label} variants={fadeUp} custom={i + 1}
               className="group rounded-2xl border bg-card p-5 card-hover">
@@ -131,9 +131,9 @@ export default function BrandDashboardPage() {
         {/* Quick actions */}
         <motion.div variants={fadeUp} custom={5} className="mb-6 grid gap-3 sm:grid-cols-3">
           {[
-            { href: "/marketplace", icon: Search, label: "Discover creators", desc: "Browse 12,000+ verified creators", color: "text-violet-600 bg-violet-50" },
-            { href: "/dashboard/brand/campaigns/new", icon: Megaphone, label: "Create campaign", desc: "Launch a new influencer campaign", color: "text-blue-600 bg-blue-50" },
-            { href: "/dashboard/brand/analytics", icon: BarChart3, label: "View analytics", desc: "Track reach, engagement & ROI", color: "text-emerald-600 bg-emerald-50" },
+            { href: "/marketplace", icon: Search, label: "Discover creators", desc: "Browse 12,000+ verified creators", color: "text-violet-500 bg-violet-500/10" },
+            { href: "/dashboard/brand/campaigns/new", icon: Megaphone, label: "Create campaign", desc: "Launch a new influencer campaign", color: "text-blue-500 bg-blue-500/10" },
+            { href: "/dashboard/brand/analytics", icon: BarChart3, label: "View analytics", desc: "Track reach, engagement & ROI", color: "text-emerald-500 bg-emerald-500/10" },
           ].map(q => (
             <Link key={q.href} href={q.href}>
               <div className="flex items-center gap-3 rounded-2xl border bg-card p-4 card-hover cursor-pointer">

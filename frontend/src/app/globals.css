@@ -218,6 +218,14 @@
     background-clip: text;
   }
 
+  /* ── dark mode badge overrides ── */
+  .dark .badge-active    { background: rgba(16,185,129,0.12); color: #34d399; }
+  .dark .badge-draft     { background: rgba(255,255,255,0.06); color: #a1a1aa; }
+  .dark .badge-paused    { background: rgba(245,158,11,0.12); color: #fbbf24; }
+  .dark .badge-completed { background: rgba(59,130,246,0.12); color: #60a5fa; }
+  .dark .badge-cancelled { background: rgba(239,68,68,0.12); color: #f87171; }
+  .dark .badge-pending   { background: rgba(234,179,8,0.12); color: #facc15; }
+
   /* ── dark mode overrides ── */
   .dark .input-field {
     background: #18181b;
