@@ -1,8 +1,12 @@
 /**
- * Route-level loading state. Without this, navigating to a server-rendered
- * page shows nothing at all until the payload arrives.
+ * Loading state for the dashboard only.
+ *
+ * Deliberately NOT at the app root: a root-level loading.tsx wraps every page
+ * in a Suspense boundary, so Next streams a 200 shell before a server page can
+ * call notFound(). That turns every missing brand or blog post into a soft 404
+ * that search engines will happily index.
  */
-export default function Loading() {
+export default function DashboardLoading() {
   return (
     <div
       role="status"

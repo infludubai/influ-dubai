@@ -312,7 +312,10 @@ export interface BrandProfile {
   logoUrl: string | null;
   description: string | null;
   country: string | null;
+  ratingAvg?: number | null;
+  ratingCount?: number;
   campaigns?: Campaign[];
+  user?: { profile: { displayName: string; avatarUrl: string | null } | null };
 }
 
 export interface Campaign {
@@ -414,6 +417,12 @@ export const api = {
     request<CreatorProfile>(`/creators/${id}`),
 
   // Brand Profile
+  getPublicBrandProfile: (id: string) =>
+    request<BrandProfile>(`/brands/${id}`),
+
+  getBrandReviews: (brandProfileId: string) =>
+    request<Review[]>(`/brands/${brandProfileId}/reviews`),
+
   getMyBrandProfile: (accessToken: string) =>
     request<BrandProfile | null>("/brands/me/profile", { accessToken }),
 

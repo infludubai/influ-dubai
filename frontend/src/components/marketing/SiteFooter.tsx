@@ -12,21 +12,22 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     ],
   },
   {
-    title: "Company",
+    title: "Solutions",
     links: [
-      { href: "/about", label: "About" },
+      { href: "/for-brands", label: "For brands" },
+      { href: "/for-creators", label: "For creators" },
+      { href: "/for-agencies", label: "For agencies" },
       { href: "/case-studies", label: "Case studies" },
-      { href: "/faq", label: "FAQ" },
-      { href: "/contact", label: "Contact" },
     ],
   },
   {
-    title: "Get started",
+    title: "Company",
     links: [
-      { href: "/register?role=BRAND", label: "For brands" },
-      { href: "/register?role=CREATOR", label: "For creators" },
-      { href: "/register?role=AGENCY", label: "For agencies" },
-      { href: "/login", label: "Log in" },
+      { href: "/about", label: "About" },
+      { href: "/blog", label: "Blog" },
+      { href: "/careers", label: "Careers" },
+      { href: "/faq", label: "FAQ" },
+      { href: "/contact", label: "Contact" },
     ],
   },
   {
@@ -35,6 +36,8 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/terms", label: "Terms of service" },
       { href: "/privacy", label: "Privacy policy" },
       { href: "/cookies", label: "Cookie policy" },
+      { href: "/acceptable-use", label: "Acceptable use" },
+      { href: "/security", label: "Security" },
     ],
   },
 ];

@@ -33,9 +33,13 @@ export default function OpengraphImage() {
               alignItems: "center",
               justifyContent: "center",
               fontSize: 30,
+              fontWeight: 800,
+              // Plain ASCII only: a decorative glyph like ✦ makes next/og
+              // fetch a font from Google at build time, which failed with a
+              // 400 and would fail again in any network-restricted build.
             }}
           >
-            ✦
+            iD
           </div>
           <div style={{ fontSize: 34, fontWeight: 700, letterSpacing: -0.5 }}>
             InfluDubai AI

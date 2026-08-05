@@ -8,11 +8,11 @@ import { useAuthStore } from "@/lib/auth-store";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const LINKS = [
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/for-brands", label: "For brands" },
+  { href: "/for-creators", label: "For creators" },
   { href: "/marketplace", label: "Marketplace" },
   { href: "/pricing", label: "Pricing" },
-  { href: "/case-studies", label: "Case studies" },
-  { href: "/about", label: "About" },
+  { href: "/blog", label: "Blog" },
 ];
 
 export function SiteHeader() {

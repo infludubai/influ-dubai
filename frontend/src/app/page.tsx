@@ -8,6 +8,7 @@ import {
   Sparkles, Zap, CheckCircle2, Star, MessageSquare, Globe, ChevronRight, Mail,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { SiteFooter } from "@/components/marketing/SiteFooter";
 
 function WhatsAppIcon({ size = 17 }: { size?: number }) {
   return (
@@ -209,7 +210,7 @@ export default function HomePage() {
           </Link>
 
           <nav className="home-nav" style={{ display: "flex", gap: 4 }}>
-            {[{ href: "/marketplace", l: "Marketplace" }, { href: "/pricing", l: "Pricing" }].map(({ href, l }) => (
+            {[{ href: "/for-brands", l: "For Brands" }, { href: "/for-creators", l: "For Creators" }, { href: "/marketplace", l: "Marketplace" }, { href: "/pricing", l: "Pricing" }].map(({ href, l }) => (
               <Link key={href} href={href} style={{ padding: "8px 14px", borderRadius: 8, fontSize: 14, fontWeight: 500, color: scrolled ? "#71717a" : "rgba(255,255,255,0.7)", textDecoration: "none", transition: "color 0.15s" }}>{l}</Link>
             ))}
           </nav>
@@ -391,35 +392,11 @@ export default function HomePage() {
         </Reveal>
       </section>
 
-      {/* ═══════════ FOOTER ═══════════ */}
-      <footer style={{ background: "#fff", borderTop: "1px solid #f4f4f5", padding: "64px 24px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 40 }}>
-          <div>
-            <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", marginBottom: 12 }}>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Sparkles size={14} color="#fff" strokeWidth={1.8} />
-              </div>
-              <span style={{ fontSize: 14, fontWeight: 700, color: "#09090b" }}>InfluDubai <span style={{ color: "#7c3aed" }}>AI</span></span>
-            </Link>
-            <p style={{ fontSize: 14, color: "#a1a1aa", lineHeight: 1.65, maxWidth: 220 }}>Creator intelligence for the UAE &amp; MENA region.</p>
-            <p style={{ fontSize: 12, color: "#d4d4d8", marginTop: 20 }}>© 2025 InfluDubai AI. All rights reserved.</p>
-          </div>
-          {[
-            { h: "Platform", links: [["Marketplace","/marketplace"],["For Creators","/register?role=CREATOR"],["For Brands","/register?role=BRAND"],["Pricing","/pricing"]] },
-            { h: "Company",  links: [["About","#"],["Blog","#"],["Careers","#"],["Contact","#"]] },
-            { h: "Legal",    links: [["Privacy","#"],["Terms","#"],["Cookies","#"]] },
-          ].map(col => (
-            <div key={col.h}>
-              <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#a1a1aa", marginBottom: 16 }}>{col.h}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {col.links.map(([l, h]) => (
-                  <Link key={l} href={h} style={{ fontSize: 14, color: "#71717a", textDecoration: "none" }}>{l}</Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </footer>
+      {/* ═══════════ FOOTER ═══════════
+          Uses the shared site footer so the homepage can't drift out of sync
+          with the rest of the site — the previous bespoke version had every
+          Company and Legal link pointing at "#". */}
+      <SiteFooter />
     </div>
   );
 }
