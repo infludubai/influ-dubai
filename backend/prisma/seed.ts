@@ -168,17 +168,17 @@ async function main() {
 
   const brandProfileIds: string[] = [];
   for (const b of brands) {
-    let existing = await prisma.user.findUnique({ where: { email: b.email }, include: { brandProfile: true } });
-    if (existing?.brandProfile) { brandProfileIds.push(existing.brandProfile.id); continue; }
+    const existing = await prisma.user.findUnique({ where: { email: b.email }, include: { brandProfiles: true } });
+    if (existing?.brandProfiles.length) { brandProfileIds.push(existing.brandProfiles[0].id); continue; }
     const user = await prisma.user.create({
       data: {
         email: b.email, passwordHash: await hash(SEED_PASSWORD), status: 'ACTIVE', roleId: roleMap.BRAND,
         profile: { create: { displayName: b.displayName, country: b.country, languages: ['English', 'Arabic'] } },
-        brandProfile: { create: { companyName: b.company, industry: b.industry, website: b.website, description: b.description, country: b.country } },
+        brandProfiles: { create: { companyName: b.company, industry: b.industry, website: b.website, description: b.description, country: b.country } },
       },
-      include: { brandProfile: true },
+      include: { brandProfiles: true },
     });
-    if (user.brandProfile) brandProfileIds.push(user.brandProfile.id);
+    if (user.brandProfiles[0]) brandProfileIds.push(user.brandProfiles[0].id);
   }
   console.log(`✓ ${brands.length} brands`);
 

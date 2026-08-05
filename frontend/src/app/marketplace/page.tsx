@@ -12,6 +12,8 @@ import {
 import { api, type CreatorProfile } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { FraudBadge } from "@/components/FraudBadge";
+import { RatingStars } from "@/components/Rating";
+import { ShortlistToggle } from "@/components/ShortlistToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const CATEGORIES = ["Fashion", "Beauty", "Fitness", "Food", "Tech", "Travel", "Family", "Finance", "Lifestyle", "Education", "Entertainment", "Business"];
@@ -155,11 +157,13 @@ function QuickInviteModal({
 
 // ── Creator card ──────────────────────────────────────────────────────────────
 function CreatorCard({
-  creator, i, onInvite,
+  creator, i, onInvite, savedIds, onSavedChange,
 }: {
   creator: CreatorProfile;
   i: number;
   onInvite?: (c: CreatorProfile) => void;
+  savedIds?: string[];
+  onSavedChange?: () => void;
 }) {
   const { user } = useAuthStore();
   const name = creator.user?.profile?.displayName ?? "Creator";
@@ -200,6 +204,9 @@ function CreatorCard({
               <MapPin className="h-3 w-3" /> {creator.location}
             </p>
           )}
+          <div className="mt-1.5">
+            <RatingStars value={creator.ratingAvg} count={creator.ratingCount} />
+          </div>
         </div>
 
         {/* Categories */}
@@ -254,6 +261,12 @@ function CreatorCard({
           </Link>
           {user.role !== "CREATOR" && (
             <>
+              <ShortlistToggle
+                creatorProfileId={creator.id}
+                saved={savedIds?.includes(creator.id) ?? false}
+                onChange={onSavedChange}
+                size={14}
+              />
               <Link href={`/messages?with=${creator.userId}`}>
                 <button className="flex h-7 w-7 items-center justify-center rounded-xl border bg-background hover:bg-muted transition-colors" title="Message">
                   <MessageSquare className="h-3.5 w-3.5" />
@@ -292,6 +305,7 @@ export default function MarketplacePage() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [inviteTarget, setInviteTarget] = useState<CreatorProfile | null>(null);
+  const [savedIds, setSavedIds] = useState<string[]>([]);
 
   const [q, setQ]               = useState(searchParams.get("q") ?? "");
   const [category, setCategory] = useState(searchParams.get("category") ?? "");
@@ -325,7 +339,19 @@ export default function MarketplacePage() {
     setLoading(false);
   }, [q, category, location, language, minRate, maxRate, minFol, maxFol, page]);
 
+  // Fetched once as a flat id list so every card can render its saved state
+  // without an extra request per creator.
+  const loadSavedIds = useCallback(async () => {
+    if (!accessToken || !isBrand) return;
+    try {
+      setSavedIds(await api.getShortlistIds(accessToken));
+    } catch {
+      setSavedIds([]);
+    }
+  }, [accessToken, isBrand]);
+
   useEffect(() => { doFetch(); }, []);
+  useEffect(() => { void loadSavedIds(); }, [loadSavedIds]);
 
   function applyFilters() { setPage(1); doFetch(1); setShowFilters(false); }
   function clearFilters() {
@@ -506,6 +532,8 @@ export default function MarketplacePage() {
                 creator={creator}
                 i={i}
                 onInvite={isBrand ? setInviteTarget : undefined}
+                savedIds={savedIds}
+                onSavedChange={loadSavedIds}
               />
             ))}
           </motion.div>

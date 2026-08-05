@@ -3,22 +3,48 @@ services:
     name: infludubai-api
     runtime: node
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
+    # Migrations run at deploy time so the schema is always ahead of the code
+    # that needs it. A failed migration fails the deploy instead of producing
+    # runtime errors against an old schema.
+    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: node dist/main.js
-    healthCheckPath: /health
+    # The app sets a global /api/v1 prefix, so the bare /health path 404s.
+    healthCheckPath: /api/v1/health
+    plan: free
+    region: frankfurt
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
+
+      # Postgres connection string from Supabase → Settings → Database.
+      # Use the pooled (pgbouncer) URI for the app.
       - key: DATABASE_URL
         sync: false
-      - key: JWT_SECRET
+
+      # Signs access tokens. Refresh tokens are opaque and DB-backed, so they
+      # need no secret of their own.
+      - key: JWT_ACCESS_SECRET
         generateValue: true
-      - key: JWT_REFRESH_SECRET
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+
+      # Encrypts API keys stored via Admin → Settings. Must stay stable:
+      # rotating it makes every stored credential unreadable.
+      - key: SETTINGS_ENCRYPTION_KEY
         generateValue: true
+
+      # Comma-separated Vercel origins allowed to call this API.
       - key: ALLOWED_ORIGINS
         sync: false
+      # Used to build links inside verification and reset emails.
+      - key: FRONTEND_URL
+        sync: false
+
+      # ── Optional integrations ────────────────────────────────────────────
+      # All of these can instead be set from Admin → Settings after launch;
+      # values here act as the fallback. Missing ones degrade gracefully.
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_KEY
@@ -38,6 +64,6 @@ services:
       - key: SMTP_PASS
         sync: false
       - key: MAIL_FROM
-        value: "InfluDubai <noreply@infludubai.com>"
-    plan: free
-    region: frankfurt
+        value: "InfluDubai AI <noreply@infludubai.com>"
+      - key: SUPPORT_EMAIL
+        value: "hello@infludubai.com"

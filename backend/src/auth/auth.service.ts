@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
@@ -29,6 +30,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly mail: MailService,
+    private readonly workspaces: WorkspacesService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -49,6 +51,10 @@ export class AuthService {
       },
       include: { profile: true, role: true },
     });
+
+    // Someone may have been invited to a workspace before they had an account;
+    // claim those now so they land straight in the team.
+    await this.workspaces.claimInvitations(user.id, user.email);
 
     await this.sendVerificationEmail(user.id, user.email);
 

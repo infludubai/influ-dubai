@@ -99,7 +99,7 @@ export default function CreatorInboxPage() {
                         <span className={`shrink-0 rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[inv.status]}`}>{inv.status}</span>
                       </div>
                       <p className="mt-0.5 text-sm text-muted-foreground">
-                        {inv.campaign.brand?.companyName ?? "Brand"} Â· <span className="font-medium text-foreground">${inv.campaign.budgetUsd?.toLocaleString()}</span> budget
+                        {inv.campaign.brand?.companyName ?? "Brand"} · <span className="font-medium text-foreground">${inv.campaign.budgetUsd?.toLocaleString()}</span> budget
                       </p>
                       {inv.message && (
                         <p className="mt-2 rounded-xl bg-muted/50 px-3 py-2 text-sm text-muted-foreground italic">"{inv.message}"</p>
@@ -125,7 +125,7 @@ export default function CreatorInboxPage() {
         ) : (
           proposals.length === 0 ? (
             <Empty icon={<Send className="h-10 w-10" />} text="No proposals sent"
-              sub={<>Browse campaigns and submit your first proposal. <Link href="/marketplace" className="text-primary hover:underline">Explore marketplace â†’</Link></>} />
+              sub={<>Browse campaigns and submit your first proposal. <Link href="/marketplace" className="text-primary hover:underline">Explore marketplace →</Link></>} />
           ) : (
             <div className="space-y-3">
               {proposals.map((p, i) => (

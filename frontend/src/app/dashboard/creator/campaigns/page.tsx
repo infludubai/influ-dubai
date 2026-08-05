@@ -28,7 +28,7 @@ function fmt(n: number) {
   return n.toString();
 }
 
-// â”€â”€ Proposal modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Proposal modal ─────────────────────────────────────────────────────────────
 function ProposalModal({
   campaign,
   onClose,
@@ -75,7 +75,7 @@ function ProposalModal({
           <div>
             <p className="font-bold">Submit a proposal</p>
             <p className="mt-0.5 text-sm text-muted-foreground">
-              {campaign.title} Â· <span className="font-medium text-foreground">{campaign.brand.companyName}</span>
+              {campaign.title} · <span className="font-medium text-foreground">{campaign.brand.companyName}</span>
             </p>
           </div>
           <button onClick={onClose} className="rounded-xl p-1.5 hover:bg-muted transition-colors shrink-0">
@@ -117,7 +117,7 @@ function ProposalModal({
               value={coverLetter}
               onChange={e => setCoverLetter(e.target.value)}
               rows={5}
-              placeholder={`Tell ${campaign.brand.companyName} why you're the perfect creator for this campaign. Mention your relevant experience, audience, and content styleâ€¦`}
+              placeholder={`Tell ${campaign.brand.companyName} why you're the perfect creator for this campaign. Mention your relevant experience, audience, and content style…`}
               className="w-full resize-none rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:border-primary transition-colors"
             />
             <p className="mt-1 text-xs text-muted-foreground">{coverLetter.length} characters</p>
@@ -145,7 +145,7 @@ function ProposalModal({
             disabled={sending || !coverLetter.trim()}
             className="gradient-brand flex flex-1 items-center justify-center gap-2 rounded-2xl py-3 text-sm font-semibold text-white disabled:opacity-50 hover:opacity-90 transition-all"
           >
-            {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sendingâ€¦</> : <><Send className="h-4 w-4" /> Submit proposal</>}
+            {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : <><Send className="h-4 w-4" /> Submit proposal</>}
           </button>
           <button onClick={onClose} className="rounded-2xl border px-5 py-3 text-sm hover:bg-muted transition-colors">
             Cancel
@@ -156,7 +156,7 @@ function ProposalModal({
   );
 }
 
-// â”€â”€ Main page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Main page ──────────────────────────────────────────────────────────────────
 export default function CreatorCampaignsPage() {
   const { accessToken, user } = useAuthStore();
   const router = useRouter();
@@ -238,7 +238,7 @@ export default function CreatorCampaignsPage() {
           <div className="rounded-2xl border bg-muted/20 py-24 text-center">
             <Megaphone className="mx-auto mb-4 h-12 w-12 opacity-20" />
             <p className="text-lg font-semibold">No active campaigns right now</p>
-            <p className="text-sm text-muted-foreground">Check back soon â€” new campaigns are posted regularly.</p>
+            <p className="text-sm text-muted-foreground">Check back soon — new campaigns are posted regularly.</p>
           </div>
         ) : (
           <motion.div

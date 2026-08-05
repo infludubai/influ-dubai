@@ -7,10 +7,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Megaphone, Search, BarChart3, MessageSquare,
   Inbox, CreditCard, Settings, LogOut, Menu, X, User, ChevronRight, Sparkles,
+  ClipboardList, Wallet, Bookmark, Users,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import { api } from "@/lib/api";
 import { NotificationBell } from "./NotificationBell";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
 
 type NavItem = { href: string; label: string; icon: React.ElementType; badge?: number };
@@ -18,6 +20,12 @@ type NavItem = { href: string; label: string; icon: React.ElementType; badge?: n
 const BOTTOM_NAV: NavItem[] = [
   { href: "/dashboard/billing", label: "Billing", icon: CreditCard },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
+];
+
+/** Team seats are a brand/agency concept — creators have no workspace. */
+const BRAND_BOTTOM_NAV: NavItem[] = [
+  { href: "/dashboard/brand/team", label: "Team", icon: Users },
+  ...BOTTOM_NAV,
 ];
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
@@ -67,6 +75,7 @@ export function DashboardShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [inboxBadge, setInboxBadge] = useState(0);
   const [msgBadge, setMsgBadge] = useState(0);
+  const [reviewBadge, setReviewBadge] = useState(0);
 
   const isCreator = user?.role === "CREATOR";
 
@@ -75,6 +84,9 @@ export function DashboardShell({
     { href: "/dashboard/brand",           label: "Overview",         icon: LayoutDashboard },
     { href: "/dashboard/brand/campaigns/new", label: "New Campaign", icon: Megaphone },
     { href: "/marketplace",               label: "Discover Creators",icon: Search },
+    { href: "/dashboard/brand/shortlist", label: "Saved Creators",   icon: Bookmark },
+    { href: "/dashboard/brand/reviews",   label: "Review Queue",     icon: ClipboardList, badge: reviewBadge },
+    { href: "/dashboard/brand/spend",     label: "Spend",            icon: Wallet },
     { href: "/dashboard/brand/analytics", label: "Analytics",        icon: BarChart3 },
     { href: "/dashboard/brand/inbox",     label: "Inbox",            icon: Inbox, badge: inboxBadge },
     { href: "/messages",                  label: "Messages",         icon: MessageSquare, badge: msgBadge },
@@ -85,6 +97,8 @@ export function DashboardShell({
     { href: "/dashboard/creator/profile", label: "My Profile",       icon: User },
     { href: "/marketplace",               label: "Marketplace",      icon: Search },
     { href: "/dashboard/creator/campaigns",label: "Browse Campaigns", icon: Megaphone },
+    { href: "/dashboard/creator/deliverables", label: "My Deliverables", icon: ClipboardList },
+    { href: "/dashboard/creator/earnings",label: "Earnings",         icon: Wallet },
     { href: "/dashboard/creator/analytics",label: "Analytics",       icon: BarChart3 },
     { href: "/dashboard/creator/inbox",   label: "Inbox",            icon: Inbox, badge: inboxBadge },
     { href: "/messages",                  label: "Messages",         icon: MessageSquare, badge: msgBadge },
@@ -113,6 +127,11 @@ export function DashboardShell({
             pending += proposals.filter((p: any) => p.status === "PENDING").length;
           }
           setInboxBadge(pending);
+
+          const awaitingReview = await api
+            .listPendingReview(accessToken!)
+            .catch(() => []);
+          setReviewBadge(awaitingReview.length);
         }
         // Message unread: count convos with unread > 0
         const convs = await api.listConversations(accessToken!).catch(() => [] as any[]);
@@ -155,6 +174,9 @@ export function DashboardShell({
         </div>
       )}
 
+      {/* Workspace switcher — renders only when there's more than one */}
+      <WorkspaceSwitcher collapsed={collapsed && !mobile} />
+
       {/* Main nav */}
       <nav className="flex-1 space-y-0.5">
         {navItems.map(item => (
@@ -169,7 +191,7 @@ export function DashboardShell({
 
       {/* Bottom nav */}
       <nav className="space-y-0.5">
-        {BOTTOM_NAV.map(item => <NavLink key={item.href} item={item} collapsed={collapsed && !mobile} />)}
+        {(isCreator ? BOTTOM_NAV : BRAND_BOTTOM_NAV).map(item => <NavLink key={item.href} item={item} collapsed={collapsed && !mobile} />)}
       </nav>
 
       {/* User */}

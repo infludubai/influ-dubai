@@ -8,9 +8,10 @@ import {
   MapPin, Star, Loader2, ShieldCheck, MessageSquare, Megaphone,
   ArrowLeft, ExternalLink, FileText, ChevronDown, ChevronUp, Sparkles, X,
 } from "lucide-react";
-import { api, type CreatorProfile } from "@/lib/api";
+import { api, type CreatorProfile, type Review } from "@/lib/api";
 import { useAuthStore } from "@/lib/auth-store";
 import { FraudBadge, FraudScoreRing } from "@/components/FraudBadge";
+import { RatingStars } from "@/components/Rating";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -41,6 +42,7 @@ export default function PublicCreatorProfilePage() {
   const [notFound, setNotFound] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [showFraud, setShowFraud] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [analysisResult, setAnalysisResult] = useState<{
     riskScore: number; riskLevel: string; flags: string[]; summary: string; aiGenerated: boolean;
   } | null>(null);
@@ -65,6 +67,10 @@ export default function PublicCreatorProfilePage() {
       })
       .catch(() => setNotFound(true))
       .finally(() => setLoading(false));
+
+    api.getCreatorReviews(params.id as string)
+      .then(setReviews)
+      .catch(() => setReviews([]));
   }, [params.id]);
 
   async function runAnalysis() {
@@ -450,6 +456,43 @@ export default function PublicCreatorProfilePage() {
                       className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
                       {item.linkUrl} <ExternalLink className="h-3 w-3" />
                     </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Reviews from brands */}
+        {reviews.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0, transition: { delay: 0.2 } }}
+            className="mb-4 rounded-2xl border bg-card p-5">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Brand reviews
+              </p>
+              <RatingStars value={profile.ratingAvg} count={profile.ratingCount} />
+            </div>
+            <div className="space-y-4">
+              {reviews.map((r, i) => (
+                <div key={r.id} className={i > 0 ? "border-t pt-4" : ""}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      {r.brandProfile?.companyName ?? "Brand"}
+                    </p>
+                    <RatingStars value={r.rating} count={1} size={12} />
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {r.campaign?.title} ·{" "}
+                    {new Date(r.createdAt).toLocaleDateString("en-AE", {
+                      month: "short",
+                      year: "numeric",
+                    })}
+                  </p>
+                  {r.comment && (
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      “{r.comment}”
+                    </p>
                   )}
                 </div>
               ))}

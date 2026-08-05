@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 
 export interface CreatorInsight {
   qualityScore: number;          // 0–100
@@ -38,15 +38,35 @@ export interface CampaignSuggestion {
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly openai: OpenAI | null;
+  private client: OpenAI | null = null;
+  private clientKey = '';
 
   constructor(
-    private readonly config: ConfigService,
     private readonly prisma: PrismaService,
-  ) {
-    const key = this.config.get<string>('OPENAI_API_KEY');
-    this.openai = key ? new OpenAI({ apiKey: key }) : null;
-    if (!this.openai) this.logger.warn('OPENAI_API_KEY not set — AI endpoints will return mock data');
+    private readonly settings: SettingsService,
+  ) {}
+
+  /**
+   * Resolved per call rather than in the constructor, so a key saved in
+   * Admin → Settings takes effect immediately without restarting the API.
+   * Returns null when unconfigured — every caller falls back to mock output.
+   */
+  private get openai(): OpenAI | null {
+    const key = this.settings.get('OPENAI_API_KEY');
+    if (!key) {
+      this.client = null;
+      this.clientKey = '';
+      return null;
+    }
+    if (!this.client || this.clientKey !== key) {
+      this.client = new OpenAI({ apiKey: key });
+      this.clientKey = key;
+    }
+    return this.client;
+  }
+
+  private get model(): string {
+    return this.settings.get('OPENAI_MODEL') ?? 'gpt-4o-mini';
   }
 
   // ── Creator analysis ────────────────────────────────────────────────────
@@ -65,7 +85,8 @@ export class AiService {
     const topPlatform = creator.socialAccounts.sort((a, b) => (b.followersCount ?? 0) - (a.followersCount ?? 0))[0];
     const totalAudience = creator.totalAudienceSize ?? creator.socialAccounts.reduce((s, a) => s + (a.followersCount ?? 0), 0);
 
-    if (!this.openai) return this.mockCreatorInsight(creator, topPlatform, totalAudience);
+    const openai = this.openai;
+    if (!openai) return this.mockCreatorInsight(creator, topPlatform, totalAudience);
 
     const prompt = `You are an influencer marketing analyst. Analyze this creator profile and return a JSON object.
 
@@ -91,8 +112,8 @@ Return ONLY valid JSON with this exact shape:
 }`;
 
     try {
-      const res = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const res = await openai.chat.completions.create({
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
         temperature: 0.4,
@@ -199,7 +220,8 @@ Return ONLY valid JSON with this exact shape:
       aiGenerated: false,
     };
 
-    if (this.openai) {
+    const openai = this.openai;
+    if (openai) {
       try {
         const prompt = `You are an influencer marketing performance analyst specializing in UAE and MENA markets.
 
@@ -226,8 +248,8 @@ Return ONLY valid JSON:
   "tips": ["<actionable tip 1>", "<actionable tip 2>", "<actionable tip 3>"]
 }`;
 
-        const res = await this.openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+        const res = await openai.chat.completions.create({
+          model: this.model,
           messages: [{ role: 'user', content: prompt }],
           response_format: { type: 'json_object' },
           temperature: 0.4,
@@ -273,7 +295,8 @@ Return ONLY valid JSON:
       take: 30,
     });
 
-    if (!this.openai) return this.mockCampaignSuggestions(campaign, creators);
+    const openai = this.openai;
+    if (!openai) return this.mockCampaignSuggestions(campaign, creators);
 
     const creatorList = creators.map((c, i) =>
       `${i + 1}. id=${c.id} name="${c.user?.profile?.displayName ?? 'Creator'}" cats=[${c.categories.join(',')}] loc="${c.location ?? ''}" audience=${c.totalAudienceSize ?? 0} rate=$${c.minRateUsd ?? 0}-$${c.maxRateUsd ?? 0}`
@@ -306,8 +329,8 @@ Select the TOP 5 best-fit creators and return ONLY valid JSON:
 }`;
 
     try {
-      const res = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+      const res = await openai.chat.completions.create({
+        model: this.model,
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
         temperature: 0.3,

@@ -56,7 +56,7 @@ export default function AdminUsersPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") { setPage(1); load(); } }}
-            placeholder="Search by email or nameâ€¦"
+            placeholder="Search by email or name…"
             className="w-full rounded-xl border bg-background pl-9 pr-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
           />
         </div>
@@ -73,7 +73,7 @@ export default function AdminUsersPage() {
 
       <div className="overflow-hidden rounded-2xl border bg-card">
         {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Loadingâ€¦</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -89,7 +89,7 @@ export default function AdminUsersPage() {
               {users.map(u => (
                 <tr key={u.id} className="hover:bg-muted/20 transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium">{u.profile?.displayName ?? "â€”"}</p>
+                    <p className="font-medium">{u.profile?.displayName ?? "—"}</p>
                     <p className="text-xs text-muted-foreground">{u.email}</p>
                   </td>
                   <td className="px-4 py-3">

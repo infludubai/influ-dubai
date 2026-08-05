@@ -31,7 +31,7 @@ export default function AdminLogsPage() {
 
       <div className="rounded-2xl border bg-card">
         {loading ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">Loadingâ€¦</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>
         ) : !log.length ? (
           <div className="py-16 text-center text-sm text-muted-foreground">No activity yet</div>
         ) : (

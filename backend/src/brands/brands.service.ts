@@ -2,10 +2,14 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { RoleName } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpsertBrandProfileDto } from './dto/upsert-brand-profile.dto';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 
 @Injectable()
 export class BrandsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workspaces: WorkspacesService,
+  ) {}
 
   private async requireBrandRole(userId: string) {
     const user = await this.prisma.user.findUnique({
@@ -17,19 +21,34 @@ export class BrandsService {
     }
   }
 
+  /**
+   * Edits the workspace the user is currently acting as, creating their first
+   * one if they have none. Agencies add further client workspaces through
+   * WorkspacesService rather than here.
+   */
   async upsertProfile(userId: string, dto: UpsertBrandProfileDto) {
     await this.requireBrandRole(userId);
-    return this.prisma.brandProfile.upsert({
-      where: { userId },
-      create: { userId, ...dto },
-      update: dto,
+    const active = await this.workspaces.resolveActive(userId);
+
+    if (!active) {
+      return this.prisma.brandProfile.create({
+        data: { userId, ...dto },
+        include: { campaigns: true },
+      });
+    }
+
+    return this.prisma.brandProfile.update({
+      where: { id: active.id },
+      data: dto,
       include: { campaigns: true },
     });
   }
 
   async getMyProfile(userId: string) {
+    const active = await this.workspaces.resolveActive(userId);
+    if (!active) return null;
     return this.prisma.brandProfile.findUnique({
-      where: { userId },
+      where: { id: active.id },
       include: {
         campaigns: {
           orderBy: { createdAt: 'desc' },

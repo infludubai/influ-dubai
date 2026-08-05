@@ -24,7 +24,7 @@ export class UsersService {
       include: {
         profile: true,
         creatorProfile: { include: { socialAccounts: true, portfolioItems: true } },
-        brandProfile: true,
+        brandProfiles: true,
       },
     });
     if (!user) throw new NotFoundException('User not found.');

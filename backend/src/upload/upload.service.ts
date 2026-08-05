@@ -1,33 +1,73 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'crypto';
 import * as path from 'path';
+import { SettingsService } from '../settings/settings.service';
+
+export type UploadBucket = 'avatars' | 'media-kits' | 'logos';
 
 @Injectable()
 export class UploadService {
-  private supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_KEY!,
-  );
+  private readonly logger = new Logger(UploadService.name);
+  private client: SupabaseClient | null = null;
+  private clientKey = '';
+
+  constructor(private readonly settings: SettingsService) {}
+
+  isConfigured(): boolean {
+    const { url, key } = this.credentials();
+    return Boolean(url && key);
+  }
+
+  private credentials() {
+    return {
+      url: this.settings.get('SUPABASE_URL') ?? '',
+      key: this.settings.get('SUPABASE_SERVICE_KEY') ?? '',
+    };
+  }
+
+  /**
+   * Built on first use rather than at construction, so the app still boots
+   * without storage credentials — only the upload endpoints degrade. The
+   * cached client is rebuilt if the credentials change at runtime.
+   */
+  private supabase(): SupabaseClient {
+    const { url, key } = this.credentials();
+    if (!this.isConfigured()) {
+      throw new ServiceUnavailableException(
+        'File storage is not configured. Add Supabase credentials in Admin → Settings → Integrations.',
+      );
+    }
+    const fingerprint = `${url}:${key}`;
+    if (!this.client || this.clientKey !== fingerprint) {
+      this.client = createClient(url, key);
+      this.clientKey = fingerprint;
+    }
+    return this.client;
+  }
 
   async uploadFile(
     buffer: Buffer,
     originalName: string,
-    bucket: 'avatars' | 'media-kits' | 'logos',
+    bucket: UploadBucket,
   ): Promise<string> {
+    const client = this.supabase();
     const ext = path.extname(originalName).toLowerCase();
     const fileName = `${randomUUID()}${ext}`;
 
-    const { error } = await this.supabase.storage
-      .from(bucket)
-      .upload(fileName, buffer, {
-        contentType: this.mimeType(ext),
-        upsert: false,
-      });
+    const { error } = await client.storage.from(bucket).upload(fileName, buffer, {
+      contentType: this.mimeType(ext),
+      upsert: false,
+    });
 
     if (error) throw new InternalServerErrorException(error.message);
 
-    const { data } = this.supabase.storage.from(bucket).getPublicUrl(fileName);
+    const { data } = client.storage.from(bucket).getPublicUrl(fileName);
     return data.publicUrl;
   }
 

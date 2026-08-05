@@ -9,7 +9,11 @@ import { MessagingGateway } from './messaging.gateway';
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({ secret: config.get('JWT_SECRET') }),
+      // Must match the secret auth.service.ts signs access tokens with,
+      // otherwise every socket handshake fails verification.
+      useFactory: (config: ConfigService) => ({
+        secret: config.get('JWT_ACCESS_SECRET'),
+      }),
     }),
   ],
   controllers: [MessagingController],

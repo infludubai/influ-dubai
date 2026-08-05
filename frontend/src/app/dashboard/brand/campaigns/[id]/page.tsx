@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, BarChart3, Calendar, DollarSign, MapPin, Tag, Users, Trash2, Megaphone } from "lucide-react";
+import { ArrowRight, BarChart3, Calendar, ClipboardList, DollarSign, MapPin, Tag, Users, Trash2, Megaphone } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import { api, type Campaign } from "@/lib/api";
 import { DashboardShell } from "@/components/DashboardShell";
 import { CampaignPredictor } from "@/components/CampaignPredictor";
+import { FundCampaignButton } from "@/components/FundCampaignButton";
 
 const STATUS_COLOR: Record<string, string> = {
   DRAFT:     "bg-yellow-500/10 text-yellow-600 border-yellow-500/20",
@@ -200,6 +201,12 @@ export default function CampaignDetailPage() {
             <p className="text-sm text-muted-foreground">Browse matching creators or view AI recommendations.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link href={`/dashboard/brand/campaigns/${campaignId}/deliverables`}>
+              <button className="flex items-center gap-1.5 rounded-xl border bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors">
+                <ClipboardList className="h-4 w-4" /> Deliverables
+              </button>
+            </Link>
+            <FundCampaignButton campaignId={campaignId} suggestedAmount={campaign.budgetUsd} />
             <Link href={`/dashboard/brand/campaigns/${campaignId}/analytics`}>
               <button className="flex items-center gap-1.5 rounded-xl border bg-background px-4 py-2 text-sm font-medium hover:bg-muted transition-colors">
                 <BarChart3 className="h-4 w-4" /> Analytics

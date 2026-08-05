@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/lib/auth-store";
 import {
   LayoutDashboard, Users, Megaphone, DollarSign, FileText, LogOut,
-  Sparkles, ShieldCheck, Menu, X, ChevronRight,
+  Sparkles, ShieldCheck, Menu, X, ChevronRight, Settings, Wallet, BadgeCheck,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -16,9 +16,12 @@ const NAV = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
+  { href: "/admin/verification", label: "Verification", icon: BadgeCheck },
   { href: "/admin/fraud", label: "Fraud Detection", icon: ShieldCheck },
   { href: "/admin/revenue", label: "Revenue", icon: DollarSign },
+  { href: "/admin/payouts", label: "Payouts", icon: Wallet },
   { href: "/admin/logs", label: "Audit Log", icon: FileText },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 function NavItem({ item, onClick }: { item: typeof NAV[0]; onClick?: () => void }) {

@@ -5,9 +5,17 @@ import { useEffect, useRef, useState } from "react";
 import { useInView } from "framer-motion";
 import {
   ArrowRight, Search, BarChart3, ShieldCheck, Users,
-  Sparkles, Zap, CheckCircle2, Star, MessageSquare, Globe, ChevronRight,
+  Sparkles, Zap, CheckCircle2, Star, MessageSquare, Globe, ChevronRight, Mail,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+
+function WhatsAppIcon({ size = 17 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12.04 2a9.84 9.84 0 0 0-8.48 14.8L2 22l5.34-1.52A9.95 9.95 0 1 0 12.04 2Zm0 17.9a8.1 8.1 0 0 1-4.13-1.13l-.3-.18-3.17.9.92-3.08-.2-.32a8.03 8.03 0 1 1 6.88 3.81Zm4.42-6.02c-.24-.12-1.44-.71-1.66-.79-.22-.08-.38-.12-.54.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2a7.27 7.27 0 0 1-1.34-1.67c-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.51.58.18 1.1.16 1.51.1.46-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28Z" />
+    </svg>
+  );
+}
 
 /* ─── data ─── */
 const STATS = [
@@ -155,9 +163,33 @@ export default function HomePage() {
 
   return (
     <div style={{ fontFamily: "system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", overflowX: "hidden", minHeight: "100vh" }}>
+      <style jsx>{`
+        @media (max-width: 900px) {
+          .home-nav,
+          .header-sign-in,
+          .header-register {
+            display: none !important;
+          }
+        }
+        @media (max-width: 520px) {
+          .home-header {
+            padding: 0 14px !important;
+          }
+          .header-theme-toggle {
+            display: none;
+          }
+          .header-contact {
+            padding: 7px 10px !important;
+            font-size: 12px !important;
+          }
+          .header-wordmark {
+            display: none;
+          }
+        }
+      `}</style>
 
       {/* ═══════════ NAVBAR ═══════════ */}
-      <header style={{
+      <header className="home-header" style={{
         position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
         padding: "0 24px",
         background: scrolled ? "rgba(255,255,255,0.95)" : "transparent",
@@ -171,21 +203,53 @@ export default function HomePage() {
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Sparkles size={16} color="#fff" strokeWidth={1.8} />
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, color: scrolled ? "#09090b" : "#fff", letterSpacing: "-0.02em" }}>
+            <span className="header-wordmark" style={{ fontSize: 15, fontWeight: 700, color: scrolled ? "#09090b" : "#fff", letterSpacing: "-0.02em" }}>
               InfluDubai <span style={{ color: scrolled ? "#7c3aed" : "#a78bfa" }}>AI</span>
             </span>
           </Link>
 
-          <nav style={{ display: "flex", gap: 4 }}>
+          <nav className="home-nav" style={{ display: "flex", gap: 4 }}>
             {[{ href: "/marketplace", l: "Marketplace" }, { href: "/pricing", l: "Pricing" }].map(({ href, l }) => (
               <Link key={href} href={href} style={{ padding: "8px 14px", borderRadius: 8, fontSize: 14, fontWeight: 500, color: scrolled ? "#71717a" : "rgba(255,255,255,0.7)", textDecoration: "none", transition: "color 0.15s" }}>{l}</Link>
             ))}
           </nav>
 
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <ThemeToggle variant={scrolled ? "default" : "ghost-white"} />
-            <Link href="/login" style={{ padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, color: scrolled ? "#71717a" : "rgba(255,255,255,0.8)", textDecoration: "none" }}>Sign in</Link>
-            <Link href="/register" style={{ textDecoration: "none" }}>
+            <a
+              className="header-contact"
+              href="https://wa.me/971543186934"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Chat with us on WhatsApp at +971 54 318 6934"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 12px",
+                borderRadius: 999, background: scrolled ? "#ecfdf5" : "rgba(37,211,102,0.14)",
+                border: scrolled ? "1px solid #bbf7d0" : "1px solid rgba(74,222,128,0.32)",
+                color: scrolled ? "#15803d" : "#86efac", fontSize: 13, fontWeight: 650,
+                textDecoration: "none", whiteSpace: "nowrap",
+              }}
+            >
+              <WhatsAppIcon />
+              <span>+971 54 318 6934</span>
+            </a>
+            <a
+              className="header-contact"
+              href="mailto:infludubai@gmail.com"
+              aria-label="Email us at infludubai@gmail.com"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 7, padding: "8px 12px",
+                borderRadius: 999, background: scrolled ? "#f5f3ff" : "rgba(139,92,246,0.14)",
+                border: scrolled ? "1px solid #ddd6fe" : "1px solid rgba(196,181,253,0.32)",
+                color: scrolled ? "#6d28d9" : "#c4b5fd", fontSize: 13, fontWeight: 650,
+                textDecoration: "none", whiteSpace: "nowrap",
+              }}
+            >
+              <Mail size={17} strokeWidth={2} />
+              <span>infludubai@gmail.com</span>
+            </a>
+            <span className="header-theme-toggle"><ThemeToggle variant={scrolled ? "default" : "ghost-white"} /></span>
+            <Link className="header-sign-in" href="/login" style={{ padding: "8px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, color: scrolled ? "#71717a" : "rgba(255,255,255,0.8)", textDecoration: "none" }}>Sign in</Link>
+            <Link className="header-register" href="/register" style={{ textDecoration: "none" }}>
               <button style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 999, padding: "10px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 14px rgba(124,58,237,0.4)" }}>Get started free</button>
             </Link>
           </div>

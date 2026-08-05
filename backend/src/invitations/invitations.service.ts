@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 
 @Injectable()
@@ -12,7 +13,7 @@ export class InvitationsService {
 
   async invite(brandUserId: string, campaignId: string, dto: CreateInvitationDto) {
     const campaign = await this.prisma.campaign.findFirst({
-      where: { id: campaignId, brand: { userId: brandUserId } },
+      where: { id: campaignId, brand: WorkspacesService.accessFilter(brandUserId) },
     });
     if (!campaign) throw new NotFoundException('Campaign not found or not yours');
 
@@ -37,7 +38,7 @@ export class InvitationsService {
 
   async listForCampaign(brandUserId: string, campaignId: string) {
     const campaign = await this.prisma.campaign.findFirst({
-      where: { id: campaignId, brand: { userId: brandUserId } },
+      where: { id: campaignId, brand: WorkspacesService.accessFilter(brandUserId) },
     });
     if (!campaign) throw new NotFoundException('Campaign not found');
     return this.prisma.campaignInvitation.findMany({

@@ -38,7 +38,7 @@ export default function BrandAnalyticsPage() {
   }, [accessToken]);
 
   const chartData = data?.campaigns.map(c => ({
-    name: c.title.length > 14 ? c.title.slice(0, 14) + "â€¦" : c.title,
+    name: c.title.length > 14 ? c.title.slice(0, 14) + "…" : c.title,
     Reach: c.reach,
     Engagement: c.engagement,
     Conversions: c.conversions,
@@ -130,7 +130,7 @@ export default function BrandAnalyticsPage() {
                           <span>Engagement: <strong className="text-foreground">{fmt(c.engagement)}</strong></span>
                           <span>Conversions: <strong className="text-foreground">{fmt(c.conversions)}</strong></span>
                           {c.roiEstimate != null && (
-                            <span className="font-semibold text-emerald-600">ROI {c.roiEstimate.toFixed(1)}Ã—</span>
+                            <span className="font-semibold text-emerald-600">ROI {c.roiEstimate.toFixed(1)}×</span>
                           )}
                         </div>
                       </div>

@@ -7,6 +7,7 @@ import { CampaignStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
 import { UpdateCampaignDto } from './dto/update-campaign.dto';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 
 const VALID_TRANSITIONS: Record<CampaignStatus, CampaignStatus[]> = {
   DRAFT:     ['ACTIVE', 'CANCELLED'],
@@ -18,19 +19,27 @@ const VALID_TRANSITIONS: Record<CampaignStatus, CampaignStatus[]> = {
 
 @Injectable()
 export class CampaignsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly workspaces: WorkspacesService,
+  ) {}
 
+  /** New campaigns belong to the workspace the user is currently acting as. */
   private async getBrandProfile(userId: string) {
-    const profile = await this.prisma.brandProfile.findUnique({ where: { userId } });
+    const profile = await this.workspaces.resolveActive(userId);
     if (!profile) throw new NotFoundException('Complete your brand profile first.');
     return profile;
   }
 
+  /**
+   * Accessible rather than strictly owned — invited team members manage the
+   * workspace's campaigns too.
+   */
   private async ownsCampaign(userId: string, campaignId: string) {
-    const brand = await this.getBrandProfile(userId);
-    const campaign = await this.prisma.campaign.findUnique({ where: { id: campaignId } });
+    const campaign = await this.prisma.campaign.findFirst({
+      where: { id: campaignId, brand: WorkspacesService.accessFilter(userId) },
+    });
     if (!campaign) throw new NotFoundException('Campaign not found.');
-    if (campaign.brandId !== brand.id) throw new ForbiddenException('Not your campaign.');
     return campaign;
   }
 

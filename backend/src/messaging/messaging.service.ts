@@ -65,7 +65,9 @@ export class MessagingService {
             profile: { select: { displayName: true } },
             role: { select: { name: true } },
             creatorProfile: { select: { profileImageUrl: true } },
-            brandProfile: { select: { logoUrl: true } },
+            // A user may own several brand workspaces; the first is enough
+            // for an avatar in the conversation list.
+            brandProfiles: { select: { logoUrl: true }, take: 1 },
           },
         });
         return {
@@ -73,7 +75,10 @@ export class MessagingService {
           unread,
           otherId,
           otherDisplayName: otherUser?.profile?.displayName ?? null,
-          otherImageUrl: otherUser?.creatorProfile?.profileImageUrl ?? otherUser?.brandProfile?.logoUrl ?? null,
+          otherImageUrl:
+            otherUser?.creatorProfile?.profileImageUrl ??
+            otherUser?.brandProfiles?.[0]?.logoUrl ??
+            null,
           otherRole: otherUser?.role?.name ?? null,
         };
       }),

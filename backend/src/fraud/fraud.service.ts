@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
 
@@ -18,15 +18,27 @@ export interface FraudAnalysis {
 @Injectable()
 export class FraudService {
   private readonly logger = new Logger(FraudService.name);
-  private readonly openai: OpenAI | null;
+  private client: OpenAI | null = null;
+  private clientKey = '';
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly config: ConfigService,
-  ) {
-    const key = this.config.get<string>('OPENAI_API_KEY');
-    this.openai = key ? new OpenAI({ apiKey: key }) : null;
-    if (!this.openai) this.logger.warn('OPENAI_API_KEY not set — fraud detection runs in rule-based mode');
+    private readonly settings: SettingsService,
+  ) {}
+
+  /** Resolved per call so an admin-saved key applies without a restart. */
+  private get openai(): OpenAI | null {
+    const key = this.settings.get('OPENAI_API_KEY');
+    if (!key) {
+      this.client = null;
+      this.clientKey = '';
+      return null;
+    }
+    if (!this.client || this.clientKey !== key) {
+      this.client = new OpenAI({ apiKey: key });
+      this.clientKey = key;
+    }
+    return this.client;
   }
 
   async analyzeCreator(creatorProfileId: string): Promise<FraudAnalysis> {
@@ -106,7 +118,8 @@ export class FraudService {
     let summary = '';
     let aiGenerated = false;
 
-    if (this.openai && accounts.length > 0) {
+    const openai = this.openai;
+    if (openai && accounts.length > 0) {
       try {
         const prompt = `You are an influencer fraud detection expert. Analyze this creator profile for authenticity risks.
 
@@ -124,8 +137,8 @@ Provide a JSON response:
   "summary": "2-3 sentence plain-English assessment of authenticity risks and any positive signals"
 }`;
 
-        const res = await this.openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+        const res = await openai.chat.completions.create({
+          model: this.settings.get('OPENAI_MODEL') ?? 'gpt-4o-mini',
           response_format: { type: 'json_object' },
           messages: [{ role: 'user', content: prompt }],
           max_tokens: 400,

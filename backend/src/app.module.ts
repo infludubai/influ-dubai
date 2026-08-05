@@ -21,12 +21,26 @@ import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './audit/audit.module';
 import { FraudModule } from './fraud/fraud.module';
 import { UploadModule } from './upload/upload.module';
+import { SettingsModule } from './settings/settings.module';
+import { DeliverablesModule } from './deliverables/deliverables.module';
+import { PaymentsModule } from './payments/payments.module';
+import { TrustModule } from './trust/trust.module';
+import { WorkspacesModule } from './workspaces/workspaces.module';
+import { ContactModule } from './contact/contact.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+    // A single dashboard page load fans out to ~10 endpoints, so 100/min
+    // throttled ordinary use. Auth routes keep their own stricter 10/min cap
+    // (see AuthController) — that's where brute-force protection matters.
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 300 }]),
     PrismaModule,
+    HealthModule,
+    AuditModule,
+    SettingsModule,
+    WorkspacesModule,
     AuthModule,
     UsersModule,
     CreatorsModule,
@@ -35,12 +49,15 @@ import { UploadModule } from './upload/upload.module';
     NotificationsModule,
     InvitationsModule,
     ProposalsModule,
+    DeliverablesModule,
+    PaymentsModule,
+    TrustModule,
+    ContactModule,
     MessagingModule,
     AnalyticsModule,
     AiModule,
     BillingModule,
     AdminModule,
-    AuditModule,
     FraudModule,
     UploadModule,
   ],

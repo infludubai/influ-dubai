@@ -11,6 +11,7 @@ import {
 import { useAuthStore } from "@/lib/auth-store";
 import { api, type CreatorProfile } from "@/lib/api";
 import { DashboardShell } from "@/components/DashboardShell";
+import { VerificationCard } from "@/components/VerificationCard";
 
 const PLATFORMS = ["INSTAGRAM", "TIKTOK", "YOUTUBE", "LINKEDIN", "X"] as const;
 const PLATFORM_LABELS: Record<string, string> = {
@@ -181,6 +182,11 @@ export default function CreatorProfilePage() {
           <motion.div variants={fadeUp} custom={0} className="mb-6">
             <h1 className="text-2xl font-bold">Creator Profile</h1>
             <p className="mt-1 text-sm text-muted-foreground">Build your professional creator presence for brands to discover</p>
+          </motion.div>
+
+          {/* Verification */}
+          <motion.div variants={fadeUp} custom={1} className="mb-6">
+            <VerificationCard />
           </motion.div>
 
           {/* Completion score */}

@@ -1,5 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { WorkspacesService } from '../workspaces/workspaces.service';
 
 @Injectable()
 export class AnalyticsService {
@@ -18,7 +19,7 @@ export class AnalyticsService {
     },
   ) {
     const campaign = await this.prisma.campaign.findFirst({
-      where: { id: campaignId, brand: { userId: brandUserId } },
+      where: { id: campaignId, brand: WorkspacesService.accessFilter(brandUserId) },
     });
     if (!campaign) throw new NotFoundException('Campaign not found');
 
@@ -40,7 +41,7 @@ export class AnalyticsService {
   // Brand: get analytics for one campaign
   async getCampaignAnalytics(brandUserId: string, campaignId: string) {
     const campaign = await this.prisma.campaign.findFirst({
-      where: { id: campaignId, brand: { userId: brandUserId } },
+      where: { id: campaignId, brand: WorkspacesService.accessFilter(brandUserId) },
     });
     if (!campaign) throw new NotFoundException('Campaign not found');
 
@@ -75,7 +76,7 @@ export class AnalyticsService {
   // Brand: aggregate across all campaigns
   async getBrandOverview(brandUserId: string) {
     const campaigns = await this.prisma.campaign.findMany({
-      where: { brand: { userId: brandUserId } },
+      where: { brand: WorkspacesService.accessFilter(brandUserId) },
       include: { metrics: { orderBy: { recordedAt: 'desc' }, take: 1 } },
     });
 

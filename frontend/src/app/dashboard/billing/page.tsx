@@ -121,7 +121,7 @@ function BillingContent() {
                   {plan !== "FREE" && !sub?.cancelAtPeriodEnd && (
                     <button onClick={cancel} disabled={cancelling}
                       className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-500/10 disabled:opacity-50 transition-colors">
-                      {cancelling ? "Cancellingâ€¦" : "Cancel"}
+                      {cancelling ? "Cancelling…" : "Cancel"}
                     </button>
                   )}
                 </div>
@@ -141,7 +141,7 @@ function BillingContent() {
                       <p className="text-2xl font-bold">${m.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
                       <button onClick={() => upgrade(p)} disabled={upgrading === p}
                         className={`mt-4 w-full rounded-xl py-2.5 text-sm font-semibold transition-all disabled:opacity-60 ${p === "PROFESSIONAL" ? "gradient-brand text-white hover:opacity-90" : "border hover:bg-muted"}`}>
-                        {upgrading === p ? "Processingâ€¦" : `Upgrade to ${m.label}`}
+                        {upgrading === p ? "Processing…" : `Upgrade to ${m.label}`}
                       </button>
                     </div>
                   );
@@ -156,7 +156,7 @@ function BillingContent() {
                 <p className="mt-1 text-sm text-muted-foreground">Upgrade to Enterprise for unlimited campaigns and a dedicated account manager.</p>
                 <button onClick={() => upgrade("ENTERPRISE")} disabled={upgrading === "ENTERPRISE"}
                   className="mt-3 rounded-xl border px-5 py-2.5 text-sm font-semibold hover:bg-muted disabled:opacity-60 transition-colors">
-                  {upgrading === "ENTERPRISE" ? "Processingâ€¦" : "Upgrade to Enterprise"}
+                  {upgrading === "ENTERPRISE" ? "Processing…" : "Upgrade to Enterprise"}
                 </button>
               </motion.div>
             )}
@@ -199,7 +199,7 @@ function BillingContent() {
 
             <p className="mt-4 text-center text-xs text-muted-foreground">
               Payments processed securely by Stripe.{" "}
-              <Link href="/pricing" className="text-primary hover:underline">View all plans â†’</Link>
+              <Link href="/pricing" className="text-primary hover:underline">View all plans →</Link>
             </p>
           </>
         )}

@@ -1,7 +1,8 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
+import { PaymentsService } from '../payments/payments.service';
 
 export const PLANS = {
   FREE: {
@@ -36,15 +37,36 @@ export const PLANS = {
 @Injectable()
 export class BillingService {
   private readonly logger = new Logger(BillingService.name);
-  private readonly stripe: Stripe | null;
+  private client: Stripe | null = null;
+  private clientKey = '';
 
   constructor(
-    private readonly config: ConfigService,
     private readonly prisma: PrismaService,
-  ) {
-    const key = this.config.get<string>('STRIPE_SECRET_KEY');
-    this.stripe = key ? new Stripe(key) : null;
-    if (!this.stripe) this.logger.warn('STRIPE_SECRET_KEY not set — billing runs in mock mode');
+    private readonly settings: SettingsService,
+    private readonly payments: PaymentsService,
+  ) {}
+
+  /**
+   * Resolved per call so a key saved in Admin → Settings switches billing out
+   * of mock mode immediately. Null means mock mode — no real charges occur.
+   */
+  private get stripe(): Stripe | null {
+    const key = this.settings.get('STRIPE_SECRET_KEY');
+    if (!key) {
+      this.client = null;
+      this.clientKey = '';
+      return null;
+    }
+    if (!this.client || this.clientKey !== key) {
+      this.client = new Stripe(key);
+      this.clientKey = key;
+    }
+    return this.client;
+  }
+
+  /** True when real Stripe credentials are configured. */
+  isLive(): boolean {
+    return this.stripe !== null;
   }
 
   // Get or create subscription record for a user
@@ -61,8 +83,9 @@ export class BillingService {
   // Create Stripe checkout session for upgrade
   async createCheckoutSession(userId: string, plan: 'PROFESSIONAL' | 'ENTERPRISE', successUrl: string, cancelUrl: string) {
     const sub = await this.getOrCreateSubscription(userId);
+    const stripe = this.stripe;
 
-    if (!this.stripe) {
+    if (!stripe) {
       // Mock: simulate upgrade immediately
       const updated = await this.prisma.subscription.update({
         where: { userId },
@@ -84,21 +107,24 @@ export class BillingService {
     }
 
     const priceId = plan === 'PROFESSIONAL'
-      ? this.config.get('STRIPE_PRICE_PROFESSIONAL')
-      : this.config.get('STRIPE_PRICE_ENTERPRISE');
+      ? this.settings.get('STRIPE_PRICE_PROFESSIONAL')
+      : this.settings.get('STRIPE_PRICE_ENTERPRISE');
 
-    if (!priceId) throw new Error('Stripe price ID not configured');
+    if (!priceId) {
+      throw new Error(
+        `Stripe price ID for the ${plan} plan is not configured — set it in Admin → Settings → Stripe.`,
+      );
+    }
 
     // Ensure Stripe customer
     let customerId = sub.stripeCustomerId ?? undefined;
     if (!customerId) {
-      const user = await this.prisma.subscription.findUnique({ where: { userId } });
-      const customer = await this.stripe.customers.create({ metadata: { userId } });
+      const customer = await stripe.customers.create({ metadata: { userId } });
       customerId = customer.id;
       await this.prisma.subscription.update({ where: { userId }, data: { stripeCustomerId: customerId } });
     }
 
-    const session = await this.stripe.checkout.sessions.create({
+    const session = await stripe.checkout.sessions.create({
       customer: customerId,
       mode: 'subscription',
       line_items: [{ price: priceId, quantity: 1 }],
@@ -113,12 +139,13 @@ export class BillingService {
   // Create billing portal session for managing subscription
   async createPortalSession(userId: string, returnUrl: string) {
     const sub = await this.getOrCreateSubscription(userId);
+    const stripe = this.stripe;
 
-    if (!this.stripe || !sub.stripeCustomerId) {
+    if (!stripe || !sub.stripeCustomerId) {
       return { url: returnUrl, mock: true };
     }
 
-    const session = await this.stripe.billingPortal.sessions.create({
+    const session = await stripe.billingPortal.sessions.create({
       customer: sub.stripeCustomerId,
       return_url: returnUrl,
     });
@@ -127,12 +154,22 @@ export class BillingService {
 
   // Handle Stripe webhook
   async handleWebhook(rawBody: Buffer, signature: string) {
-    if (!this.stripe) return;
-    const secret = this.config.get<string>('STRIPE_WEBHOOK_SECRET') ?? '';
+    const stripe = this.stripe;
+    if (!stripe) return;
+
+    const secret = this.settings.get('STRIPE_WEBHOOK_SECRET');
+    if (!secret) {
+      // Processing unverified webhooks would let anyone forge subscription
+      // upgrades, so refuse rather than fall back to an empty secret.
+      this.logger.error(
+        'Received a Stripe webhook but STRIPE_WEBHOOK_SECRET is not set — refusing to process it unverified.',
+      );
+      throw new Error('Webhook secret not configured');
+    }
 
     let event: Stripe.Event;
     try {
-      event = this.stripe.webhooks.constructEvent(rawBody, signature, secret);
+      event = stripe.webhooks.constructEvent(rawBody, signature, secret);
     } catch (err) {
       this.logger.error('Webhook signature verification failed', err);
       throw err;
@@ -141,7 +178,18 @@ export class BillingService {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const { userId, plan } = session.metadata ?? {};
+        const { userId, plan, kind } = session.metadata ?? {};
+
+        // Campaign funding shares this event type with subscription checkout;
+        // the metadata tag is what distinguishes them.
+        if (kind === 'campaign_funding') {
+          await this.payments.markCheckoutPaid(
+            session.id,
+            (session.payment_intent as string) ?? undefined,
+          );
+          break;
+        }
+
         if (userId && plan) {
           await this.prisma.subscription.update({
             where: { userId },
@@ -204,11 +252,12 @@ export class BillingService {
   // Cancel at period end
   async cancelSubscription(userId: string) {
     const sub = await this.getOrCreateSubscription(userId);
-    if (!this.stripe || !sub.stripeSubscriptionId) {
+    const stripe = this.stripe;
+    if (!stripe || !sub.stripeSubscriptionId) {
       await this.prisma.subscription.update({ where: { userId }, data: { plan: 'FREE', status: 'CANCELLED' } });
       return { cancelled: true, mock: true };
     }
-    await this.stripe.subscriptions.update(sub.stripeSubscriptionId, { cancel_at_period_end: true });
+    await stripe.subscriptions.update(sub.stripeSubscriptionId, { cancel_at_period_end: true });
     await this.prisma.subscription.update({ where: { userId }, data: { cancelAtPeriodEnd: true } });
     return { cancelled: true };
   }

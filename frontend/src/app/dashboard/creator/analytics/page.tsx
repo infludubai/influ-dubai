@@ -130,7 +130,7 @@ export default function CreatorAnalyticsPage() {
                 <div className="py-16 text-center">
                   <BarChart3 className="mx-auto mb-3 h-10 w-10 opacity-20" />
                   <p className="text-muted-foreground text-sm">No accepted campaigns yet.</p>
-                  <Link href="/marketplace" className="mt-2 inline-block text-sm text-primary hover:underline">Browse campaigns â†’</Link>
+                  <Link href="/marketplace" className="mt-2 inline-block text-sm text-primary hover:underline">Browse campaigns →</Link>
                 </div>
               ) : (
                 <div className="divide-y">
