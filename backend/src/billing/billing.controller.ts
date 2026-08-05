@@ -6,16 +6,16 @@ import type { RawBodyRequest } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { BillingService, PLANS } from './billing.service';
+import { BillingService } from './billing.service';
 
 @Controller('billing')
 export class BillingController {
   constructor(private readonly billing: BillingService) {}
 
-  // Public: plan definitions
+  // Public: plan definitions, with prices and copy as configured by an admin.
   @Get('plans')
   getPlans() {
-    return PLANS;
+    return this.billing.publicPlans();
   }
 
   @UseGuards(JwtAuthGuard)

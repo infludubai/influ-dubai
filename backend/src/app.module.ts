@@ -28,6 +28,7 @@ import { TrustModule } from './trust/trust.module';
 import { WorkspacesModule } from './workspaces/workspaces.module';
 import { ContactModule } from './contact/contact.module';
 import { HealthModule } from './health/health.module';
+import { ContentModule } from './content/content.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { HealthModule } from './health/health.module';
     HealthModule,
     AuditModule,
     SettingsModule,
+    ContentModule,
     WorkspacesModule,
     AuthModule,
     UsersModule,

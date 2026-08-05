@@ -218,6 +218,43 @@ export interface AdminPayouts {
   summary: { status: PayoutStatus; count: number; netUsd: number; feeUsd: number }[];
 }
 
+export type ContentType = "text" | "textarea" | "number" | "url" | "list" | "rows";
+
+export interface ContentField {
+  key: string;
+  label: string;
+  page: string;
+  section: string;
+  type: ContentType;
+  help?: string;
+  columns?: string[];
+  value: string;
+  defaultValue: string;
+  customised: boolean;
+  updatedAt: string | null;
+}
+
+export interface AdminContent {
+  pages: { id: string; title: string; description: string }[];
+  fields: ContentField[];
+}
+
+export interface PublicPlan {
+  key: "FREE" | "PROFESSIONAL" | "ENTERPRISE";
+  name: string;
+  tagline: string;
+  price: number;
+  currency: string;
+  period: string;
+  features: string[];
+  highlighted: boolean;
+  campaigns: number;
+  creators: number;
+  aiInsights: boolean;
+  analytics: boolean;
+  support: string;
+}
+
 export type SettingGroupId = "openai" | "stripe" | "supabase" | "smtp" | "platform";
 
 export interface PlatformSettingGroup {
@@ -484,8 +521,7 @@ export const api = {
     }>>(`/campaigns/${campaignId}/recommendations`, { accessToken }),
 
   // Billing
-  getPlans: () =>
-    request<Record<string, { name: string; priceUsd: number; campaigns: number; creators: number; aiInsights: boolean; analytics: boolean; support: string }>>('/billing/plans'),
+  getPlans: () => request<PublicPlan[]>('/billing/plans'),
 
   getSubscription: (accessToken: string) =>
     request<{
@@ -940,6 +976,26 @@ export const api = {
       payoutCount: number;
       invoiceCount: number;
     }>('/admin/revenue/platform', { accessToken }),
+
+  // Public website copy (client-side reads; server components use lib/content)
+  getSiteContent: () => request<Record<string, string>>('/content'),
+
+  // Website content (admin)
+  adminGetContent: (accessToken: string) =>
+    request<AdminContent>('/admin/content', { accessToken }),
+
+  adminUpdateContent: (accessToken: string, values: Record<string, string>) =>
+    request<AdminContent>('/admin/content', {
+      method: 'PUT',
+      body: JSON.stringify({ values }),
+      accessToken,
+    }),
+
+  adminResetContentPage: (accessToken: string, page: string) =>
+    request<AdminContent>(`/admin/content/reset/${page}`, {
+      method: 'POST',
+      accessToken,
+    }),
 
   // Platform settings (admin)
   adminGetSettings: (accessToken: string) =>

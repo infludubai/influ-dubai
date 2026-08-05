@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { Globe, ShieldCheck, Sparkles, Target, ArrowRight } from "lucide-react";
 import { PageHero } from "@/components/marketing/Prose";
+import { getSiteContent } from "@/lib/content";
 import { pageMetadata } from "@/lib/seo";
+
+// Copy is admin-editable, so this must not be frozen at build time.
+export const dynamic = "force-dynamic";
 
 export const metadata = pageMetadata({
   title: "About",
@@ -33,35 +37,26 @@ const VALUES = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const content = await getSiteContent();
+  const paragraphs = (content["about.body"] ?? "")
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
   return (
     <>
       <PageHero
         eyebrow="About us"
-        title="Influencer marketing the region can actually trust"
-        subtitle="The UAE creator economy grew faster than the tooling around it. Brands still source creators through DMs and spreadsheets, and still can't tell a real audience from a purchased one."
+        title={content["about.title"] ?? "About us"}
+        subtitle={content["about.subtitle"]}
       />
 
       <section className="mx-auto max-w-3xl px-5 py-16">
         <div className="space-y-5 text-[15px] leading-relaxed text-muted-foreground">
-          <p>
-            InfluDubai AI was built to close that gap. Brands and agencies get a
-            searchable, vetted marketplace of UAE and MENA creators, AI-assisted
-            matching against a real brief, and a workflow that carries a campaign
-            from invitation through deliverable approval to payout.
-          </p>
-          <p>
-            Creators get something equally overdue: a professional profile that
-            surfaces them to serious buyers, a verification badge that means
-            something, clear rates agreed up front, and payment that is released
-            automatically when work is approved — not sixty days later after a
-            chase.
-          </p>
-          <p>
-            We take a transparent platform fee on creator payouts and offer
-            subscription tiers for teams that need more campaigns, seats and
-            analytics depth. There are no hidden markups on creator rates.
-          </p>
+          {paragraphs.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
         </div>
 
         <div className="mt-12 grid gap-4 sm:grid-cols-2">

@@ -1,88 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CheckCircle2, Sparkles, Zap, Building2, ArrowRight, HelpCircle } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuthStore } from "@/lib/auth-store";
-import { api } from "@/lib/api";
+import { api, type PublicPlan } from "@/lib/api";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   visible: (i = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.45, delay: i * 0.08 } }),
 };
 
-const PLANS = [
-  {
-    key: "FREE",
-    name: "Free",
-    price: 0,
-    period: "forever",
-    desc: "Perfect for getting started. No credit card required.",
-    icon: Zap,
-    iconColor: "text-gray-600 bg-gray-100",
-    highlight: false,
-    features: [
-      "1 active campaign",
-      "Up to 5 creator profiles",
-      "Basic search & discovery",
-      "Community support",
-      "Platform messaging",
-    ],
-    missing: ["AI insights", "Advanced analytics", "Priority support"],
-    cta: "Start for free",
-    href: "/register",
-  },
-  {
-    key: "PROFESSIONAL",
-    name: "Professional",
-    price: 99,
-    period: "per month",
-    desc: "For growing brands running regular influencer campaigns.",
-    icon: Sparkles,
-    iconColor: "text-primary bg-primary/10",
-    highlight: true,
-    features: [
-      "10 active campaigns",
-      "Up to 100 creator profiles",
-      "Advanced search & filters",
-      "AI creator insights & scoring",
-      "Full analytics dashboard",
-      "Email support",
-      "Campaign ROI tracking",
-      "Proposal management",
-    ],
-    missing: [],
-    cta: "Start Professional",
-    href: null,
-  },
-  {
-    key: "ENTERPRISE",
-    name: "Enterprise",
-    price: 299,
-    period: "per month",
-    desc: "For agencies and large brands with unlimited needs.",
-    icon: Building2,
-    iconColor: "text-purple-600 bg-purple-100",
-    highlight: false,
-    features: [
-      "Unlimited campaigns",
-      "Unlimited creator profiles",
-      "Dedicated account manager",
-      "AI insights & predictions",
-      "Custom analytics & exports",
-      "Priority 24/7 support",
-      "White-label options",
-      "API access",
-      "Custom contracts",
-    ],
-    missing: [],
-    cta: "Start Enterprise",
-    href: null,
-  },
-];
+/* Presentation only. Names, prices, taglines and features come from
+   Admin → Content via GET /billing/plans, so an admin can change the offer
+   without a deploy. Icons and colours stay in code. */
+const PLAN_STYLE: Record<string, { icon: React.ElementType; iconColor: string; cta: string }> = {
+  FREE:         { icon: Zap,       iconColor: "text-gray-600 bg-gray-100",       cta: "Start for free" },
+  PROFESSIONAL: { icon: Sparkles,  iconColor: "text-primary bg-primary/10",     cta: "Upgrade" },
+  ENTERPRISE:   { icon: Building2, iconColor: "text-blue-600 bg-blue-500/10",   cta: "Contact sales" },
+};
 
 const FAQS = [
   { q: "Is there a free trial?", a: "The Free plan is unlimited — use it as long as you need. Professional and Enterprise plans can be cancelled anytime." },
@@ -97,6 +36,25 @@ export default function PricingPage() {
   const router = useRouter();
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [plans, setPlans] = useState<PublicPlan[]>([]);
+  const [copy, setCopy] = useState<Record<string, string>>({});
+  const [loadingPlans, setLoadingPlans] = useState(true);
+
+  const c = (k: string, fallback = "") => copy[k] ?? fallback;
+
+  const load = useCallback(async () => {
+    try {
+      const [p, content] = await Promise.all([api.getPlans(), api.getSiteContent()]);
+      setPlans(p);
+      setCopy(content);
+    } catch {
+      setPlans([]);
+    } finally {
+      setLoadingPlans(false);
+    }
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
 
   async function handleUpgrade(planKey: string) {
     if (!accessToken) { router.push(`/register`); return; }
@@ -137,31 +95,34 @@ export default function PricingPage() {
           className="mb-16 text-center">
           <motion.div variants={fadeUp} custom={0}
             className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/8 px-4 py-1.5 text-sm text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Simple, transparent pricing
+            <Sparkles className="h-3.5 w-3.5" /> {c("pricing.title", "Simple, transparent pricing")}
           </motion.div>
           <motion.h1 variants={fadeUp} custom={1} className="text-5xl font-bold text-balance">
-            Choose your plan
+            {c("pricing.title", "Choose your plan")}
           </motion.h1>
           <motion.p variants={fadeUp} custom={2} className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-            Start free, scale as you grow. All plans include our core discovery tools.
+            {c("pricing.subtitle", "Start free, scale as you grow.")}
           </motion.p>
         </motion.div>
 
         {/* Plans */}
         <div className="mb-20 grid gap-6 lg:grid-cols-3">
-          {PLANS.map((plan, i) => (
+          {plans.map((plan, i) => {
+            const style = PLAN_STYLE[plan.key] ?? PLAN_STYLE.FREE;
+            const isFree = plan.price <= 0;
+            return (
             <motion.div
               key={plan.key}
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1, duration: 0.45 }}
               className={`relative flex flex-col rounded-3xl border p-8 ${
-                plan.highlight
+                plan.highlighted
                   ? "border-primary bg-primary/3 shadow-2xl shadow-primary/15 ring-2 ring-primary/20"
                   : "bg-card hover:border-border/80"
               } transition-all`}
             >
-              {plan.highlight && (
+              {plan.highlighted && (
                 <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
                   <span className="rounded-full gradient-brand px-4 py-1 text-xs font-bold text-white shadow-md">
                     Most Popular
@@ -170,29 +131,33 @@ export default function PricingPage() {
               )}
 
               <div className="mb-5">
-                <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl ${plan.iconColor}`}>
-                  <plan.icon className="h-5 w-5" />
+                <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-2xl ${style.iconColor}`}>
+                  <style.icon className="h-5 w-5" />
                 </div>
                 <h2 className="text-xl font-bold">{plan.name}</h2>
-                <p className="mt-1 text-sm text-muted-foreground">{plan.desc}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{plan.tagline}</p>
               </div>
 
               <div className="mb-6">
                 <div className="flex items-end gap-1.5">
-                  <span className="text-4xl font-bold">${plan.price}</span>
-                  <span className="mb-1 text-sm text-muted-foreground">/{plan.period}</span>
+                  <span className="text-4xl font-bold">
+                    {plan.currency} {plan.price.toLocaleString()}
+                  </span>
+                  <span className="mb-1 text-sm text-muted-foreground">
+                    {isFree ? "forever" : plan.period}
+                  </span>
                 </div>
               </div>
 
               {/* CTA */}
-              {plan.href ? (
-                <Link href={plan.href}>
+              {isFree ? (
+                <Link href="/register">
                   <button className={`w-full rounded-2xl py-3 text-sm font-semibold transition-all ${
-                    plan.highlight
+                    plan.highlighted
                       ? "gradient-brand text-white shadow-md shadow-primary/25 hover:opacity-90"
                       : "border hover:bg-muted"
                   }`}>
-                    {plan.cta} <ArrowRight className="inline h-4 w-4 ml-1" />
+                    {style.cta} <ArrowRight className="inline h-4 w-4 ml-1" />
                   </button>
                 </Link>
               ) : (
@@ -200,12 +165,12 @@ export default function PricingPage() {
                   onClick={() => handleUpgrade(plan.key)}
                   disabled={upgrading === plan.key}
                   className={`w-full rounded-2xl py-3 text-sm font-semibold transition-all disabled:opacity-60 ${
-                    plan.highlight
+                    plan.highlighted
                       ? "gradient-brand text-white shadow-md shadow-primary/25 hover:opacity-90"
                       : "border hover:bg-muted"
                   }`}
                 >
-                  {upgrading === plan.key ? "Processing…" : <>{plan.cta} <ArrowRight className="inline h-4 w-4 ml-1" /></>}
+                  {upgrading === plan.key ? "Processing…" : <>{style.cta} <ArrowRight className="inline h-4 w-4 ml-1" /></>}
                 </button>
               )}
 
@@ -219,8 +184,21 @@ export default function PricingPage() {
                 ))}
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
+
+        {loadingPlans && (
+          <p className="mb-20 text-center text-sm text-muted-foreground">
+            Loading plans…
+          </p>
+        )}
+
+        {c("pricing.footnote") && (
+          <p className="mx-auto mb-16 max-w-xl text-center text-xs text-muted-foreground">
+            {c("pricing.footnote")}
+          </p>
+        )}
 
         {/* Feature comparison table */}
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}

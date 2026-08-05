@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/lib/auth-store";
 import {
   LayoutDashboard, Users, Megaphone, DollarSign, FileText, LogOut,
-  Sparkles, ShieldCheck, Menu, X, ChevronRight, Settings, Wallet, BadgeCheck,
+  Sparkles, ShieldCheck, Menu, X, ChevronRight, Settings, Wallet, BadgeCheck, Pencil,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -21,6 +21,7 @@ const NAV = [
   { href: "/admin/revenue", label: "Revenue", icon: DollarSign },
   { href: "/admin/payouts", label: "Payouts", icon: Wallet },
   { href: "/admin/logs", label: "Audit Log", icon: FileText },
+  { href: "/admin/content", label: "Website Content", icon: Pencil },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

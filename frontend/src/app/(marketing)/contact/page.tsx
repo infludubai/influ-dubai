@@ -1,7 +1,10 @@
 import { Mail, MapPin, MessageSquare, Clock } from "lucide-react";
 import { PageHero } from "@/components/marketing/Prose";
 import { ContactForm } from "@/components/marketing/ContactForm";
+import { getSiteContent } from "@/lib/content";
 import { pageMetadata } from "@/lib/seo";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = pageMetadata({
   title: "Contact",
@@ -10,38 +13,32 @@ export const metadata = pageMetadata({
     "Talk to the InfluDubai AI team about campaigns, partnerships, enterprise plans or creator verification.",
 });
 
-const CHANNELS = [
-  {
-    icon: Mail,
-    title: "Email",
-    value: "hello@infludubai.com",
-    href: "mailto:hello@infludubai.com",
-  },
-  {
-    icon: MessageSquare,
-    title: "Sales & enterprise",
-    value: "sales@infludubai.com",
-    href: "mailto:sales@infludubai.com",
-  },
-  {
-    icon: MapPin,
-    title: "Office",
-    value: "Dubai, United Arab Emirates",
-  },
-  {
-    icon: Clock,
-    title: "Response time",
-    value: "Within one business day",
-  },
-];
+export default async function ContactPage() {
+  const c = await getSiteContent();
 
-export default function ContactPage() {
+  const CHANNELS = [
+    {
+      icon: Mail,
+      title: "Email",
+      value: c["global.supportEmail"],
+      href: `mailto:${c["global.supportEmail"]}`,
+    },
+    {
+      icon: MessageSquare,
+      title: "Sales & enterprise",
+      value: c["global.salesEmail"],
+      href: `mailto:${c["global.salesEmail"]}`,
+    },
+    { icon: MapPin, title: "Office", value: c["global.address"] },
+    { icon: Clock, title: "Response time", value: c["contact.responseTime"] },
+  ];
+
   return (
     <>
       <PageHero
         eyebrow="Contact"
-        title="Get in touch"
-        subtitle="Questions about campaigns, enterprise plans, verification or partnerships — we read everything that comes in."
+        title={c["contact.title"] ?? "Get in touch"}
+        subtitle={c["contact.subtitle"]}
       />
 
       <section className="mx-auto max-w-5xl px-5 py-14">

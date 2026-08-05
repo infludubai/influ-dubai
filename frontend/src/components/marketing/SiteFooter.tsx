@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Sparkles, Mail, MapPin } from "lucide-react";
+import { getSiteContent } from "@/lib/content";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -42,8 +43,11 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   },
 ];
 
-export function SiteFooter() {
+/** Server component so brand and contact details come from Admin → Content. */
+export async function SiteFooter() {
+  const c = await getSiteContent();
   const year = new Date().getFullYear();
+  const brand = c["global.brandName"];
 
   return (
     <footer className="border-t bg-muted/20">
@@ -54,23 +58,20 @@ export function SiteFooter() {
               <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand shadow-md">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="text-base font-bold tracking-tight">
-                InfluDubai <span className="gradient-text">AI</span>
-              </span>
+              <span className="text-base font-bold tracking-tight">{brand}</span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Creator intelligence and influencer marketing built for the UAE
-              and wider MENA market.
+              {c["global.tagline"]}
             </p>
             <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
               <p className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5" /> Dubai, United Arab Emirates
+                <MapPin className="h-3.5 w-3.5" /> {c["global.address"]}
               </p>
               <a
-                href="mailto:hello@infludubai.com"
+                href={`mailto:${c["global.supportEmail"]}`}
                 className="flex items-center gap-1.5 transition-colors hover:text-foreground"
               >
-                <Mail className="h-3.5 w-3.5" /> hello@infludubai.com
+                <Mail className="h-3.5 w-3.5" /> {c["global.supportEmail"]}
               </a>
             </div>
           </div>
@@ -97,8 +98,10 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-xs text-muted-foreground">
-          <p>© {year} InfluDubai AI. All rights reserved.</p>
-          <p>Built for UAE &amp; MENA creators and brands.</p>
+          <p>
+            © {year} {brand}. All rights reserved.
+          </p>
+          <p>{c["global.footerNote"]}</p>
         </div>
       </div>
     </footer>

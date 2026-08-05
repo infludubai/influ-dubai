@@ -763,3 +763,19 @@ model WorkspaceMember {
   @@index([userId])
   @@map("workspace_members")
 }
+
+/// Editable website copy, managed from Admin → Content.
+///
+/// Only keys present in the content catalog are honoured; anything else is
+/// ignored on read. A missing row means "use the built-in default", so the
+/// site always renders even with an empty table.
+model SiteContent {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  updatedById String?  @map("updated_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("site_content")
+}

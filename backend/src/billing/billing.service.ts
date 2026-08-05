@@ -3,11 +3,16 @@ import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { PaymentsService } from '../payments/payments.service';
+import { ContentService } from '../content/content.service';
 
+/**
+ * Structural plan limits. Prices and display copy are NOT here — they live in
+ * the content catalog so an admin can change them from Admin → Content without
+ * a redeploy. Only entitlements are code, because changing those changes
+ * behaviour rather than presentation.
+ */
 export const PLANS = {
   FREE: {
-    name: 'Free',
-    priceUsd: 0,
     campaigns: 1,
     creators: 5,
     aiInsights: false,
@@ -15,8 +20,6 @@ export const PLANS = {
     support: 'Community',
   },
   PROFESSIONAL: {
-    name: 'Professional',
-    priceUsd: 99,
     campaigns: 10,
     creators: 100,
     aiInsights: true,
@@ -24,8 +27,6 @@ export const PLANS = {
     support: 'Email',
   },
   ENTERPRISE: {
-    name: 'Enterprise',
-    priceUsd: 299,
     campaigns: -1, // unlimited
     creators: -1,
     aiInsights: true,
@@ -33,6 +34,14 @@ export const PLANS = {
     support: 'Dedicated',
   },
 } as const;
+
+export type PlanKey = keyof typeof PLANS;
+
+const CONTENT_KEY: Record<PlanKey, string> = {
+  FREE: 'free',
+  PROFESSIONAL: 'professional',
+  ENTERPRISE: 'enterprise',
+};
 
 @Injectable()
 export class BillingService {
@@ -44,7 +53,43 @@ export class BillingService {
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
     private readonly payments: PaymentsService,
+    private readonly content: ContentService,
   ) {}
+
+  /** Price for a plan, as configured in Admin → Content → Pricing. */
+  planPrice(plan: PlanKey): number {
+    const raw = this.content.getPublic()[`pricing.${CONTENT_KEY[plan]}.price`];
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  }
+
+  planCurrency(): string {
+    return (this.content.getPublic()['pricing.currency'] ?? 'AED').toUpperCase();
+  }
+
+  /** Plan definitions merged with admin-edited names, prices and features. */
+  publicPlans() {
+    const c = this.content.getPublic();
+    const currency = this.planCurrency();
+
+    return (Object.keys(PLANS) as PlanKey[]).map((key) => {
+      const slug = CONTENT_KEY[key];
+      return {
+        key,
+        name: c[`pricing.${slug}.name`] ?? key,
+        tagline: c[`pricing.${slug}.tagline`] ?? '',
+        price: this.planPrice(key),
+        currency,
+        period: c['pricing.period'] ?? '/month',
+        features: (c[`pricing.${slug}.features`] ?? '')
+          .split('\n')
+          .map((f) => f.trim())
+          .filter(Boolean),
+        highlighted: (c['pricing.highlight'] ?? 'professional') === slug,
+        ...PLANS[key],
+      };
+    });
+  }
 
   /**
    * Resolved per call so a key saved in Admin → Settings switches billing out
@@ -99,7 +144,7 @@ export class BillingService {
       await this.prisma.invoice.create({
         data: {
           subscriptionId: updated.id,
-          amountUsd: PLANS[plan].priceUsd,
+          amountUsd: this.planPrice(plan),
           status: 'paid',
         },
       });
