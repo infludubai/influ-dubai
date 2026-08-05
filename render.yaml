@@ -6,7 +6,12 @@ services:
     # Migrations run at deploy time so the schema is always ahead of the code
     # that needs it. A failed migration fails the deploy instead of producing
     # runtime errors against an old schema.
-    buildCommand: npm ci && npx prisma generate && npx prisma migrate deploy && npm run build
+    #
+    # --include=dev matters: NODE_ENV=production below is applied at build
+    # time too, and npm ci would otherwise omit devDependencies — which is
+    # where the Nest CLI, Prisma CLI and TypeScript live. Without it the
+    # build dies with "nest: not found".
+    buildCommand: npm ci --include=dev && npx prisma generate && npx prisma migrate deploy && npm run build
     startCommand: node dist/main.js
     # The app sets a global /api/v1 prefix, so the bare /health path 404s.
     healthCheckPath: /api/v1/health
