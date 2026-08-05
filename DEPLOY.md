@@ -86,23 +86,39 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
 
 ---
 
-## 4. Close the loop
+## 4. Create your admin account
 
-1. Set Render's `ALLOWED_ORIGINS` and `FRONTEND_URL` to the real Vercel domain, then redeploy the API.
-2. Seed reference data (optional, from your machine):
-   ```bash
-   cd backend && DATABASE_URL="<supabase direct URI>" npm run prisma:seed
-   ```
-   Use the **direct** connection URI (port `5432`) for seeding, not the pooler.
-3. Promote your admin user:
-   ```sql
-   UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'ADMIN')
-   WHERE email = 'you@yourdomain.com';
-   ```
+Run this from your machine, against the **direct** Supabase URI (port `5432`,
+not the pooler). Nothing is committed — the credentials come from your shell:
+
+```bash
+cd backend
+DATABASE_URL="<supabase direct URI>" \
+ADMIN_EMAIL="you@yourdomain.com" \
+ADMIN_PASSWORD="a-long-unique-passphrase" \
+ADMIN_NAME="Your Name" \
+npm run admin:create
+```
+
+Then sign in at `/login` and open `/admin`.
+
+The script is safe to re-run: an existing user is promoted to ADMIN and their
+password is left alone unless you pass `ADMIN_RESET_PASSWORD=true`. It refuses
+passwords under 12 characters and any password that appears in this repo.
+
+> **Do not run `npm run prisma:seed` against production.** That is the demo
+> seed: it inserts fake creators, brands and campaigns into your live
+> marketplace, and creates an admin whose password is published in this
+> repository. It now refuses to run when `NODE_ENV=production`.
+
+## 5. Close the loop
+
+Set Render's `ALLOWED_ORIGINS` and `FRONTEND_URL` to the real Vercel domain,
+then redeploy the API.
 
 ---
 
-## 5. Configure integrations — no redeploy needed
+## 6. Configure integrations — no redeploy needed
 
 Sign in as an admin and open **Admin → Settings → Integrations**. Keys entered
 here are encrypted with AES-256-GCM, take effect immediately, and override the
@@ -129,7 +145,7 @@ so this is required before billing works.
 
 ---
 
-## 6. Custom domain
+## 7. Custom domain
 
 1. Vercel → Project → **Domains** → add `infludubai.com`, follow the DNS records.
 2. Update Render's `ALLOWED_ORIGINS` and `FRONTEND_URL` to the custom domain and redeploy.
@@ -137,7 +153,7 @@ so this is required before billing works.
 
 ---
 
-## 7. Post-deploy smoke test
+## 8. Post-deploy smoke test
 
 - [ ] `/api/v1/health/ready` returns `database.ok = true`
 - [ ] Home, `/marketplace`, `/pricing`, `/how-it-works` load

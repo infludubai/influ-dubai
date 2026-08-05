@@ -6,6 +6,21 @@ const SEED_PASSWORD = 'Demo1234!';
 const hash = (pw: string) => bcrypt.hash(pw, 10);
 
 async function main() {
+  // This script inserts fake creators, brands and campaigns, and an admin
+  // whose password is committed to this repository. Running it against a live
+  // database would publish demo profiles in the real marketplace and leave a
+  // publicly-known admin login. Use `npm run admin:create` in production.
+  if (process.env.NODE_ENV === 'production' && process.env.SEED_ALLOW_PRODUCTION !== 'true') {
+    console.error(
+      '\n✗ Refusing to seed demo data with NODE_ENV=production.\n' +
+        '  This would add fake creators and campaigns to your live marketplace,\n' +
+        '  and create an admin with a password published in this repo.\n\n' +
+        '  For a real admin account:  npm run admin:create\n' +
+        '  To override anyway:        SEED_ALLOW_PRODUCTION=true\n',
+    );
+    process.exit(1);
+  }
+
   console.log('🌱 Seeding InfluDubai AI demo data…\n');
 
   // ── Roles ──────────────────────────────────────────────────────────────────

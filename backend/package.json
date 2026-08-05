@@ -21,6 +21,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:seed": "ts-node --project tsconfig.seed.json --transpile-only prisma/seed.ts",
+    "admin:create": "ts-node --project tsconfig.seed.json --transpile-only prisma/create-admin.ts",
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
