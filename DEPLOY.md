@@ -23,7 +23,10 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
 
 1. [supabase.com](https://supabase.com) → **New project** → name `infludubai`, region **Frankfurt (eu-central-1)**. Save the database password.
 2. **Settings → Database → Connection string → URI.** Copy it — this is `DATABASE_URL`.
-   Use the **Session pooler** URI for the app (port `6543`) and append `?pgbouncer=true&connection_limit=1`.
+   Use the **Session pooler** URI (the one on port **5432** via `…pooler.supabase.com`).
+   Do **not** use the transaction pooler (port `6543`) — `prisma migrate deploy`
+   runs during every Render build, and migrations fail through a transaction
+   pooler with prepared-statement errors.
 3. **Storage → New bucket**, create three, all **Public**:
 
    | Bucket | Public |
