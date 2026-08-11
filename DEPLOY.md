@@ -49,8 +49,8 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
 
    ```
    DATABASE_URL     = <Supabase pooled URI from step 1.2>
-   ALLOWED_ORIGINS  = https://<your-vercel-domain>
-   FRONTEND_URL     = https://<your-vercel-domain>
+   ALLOWED_ORIGINS  = https://www.infludubai.com
+   FRONTEND_URL     = https://www.infludubai.com
    SUPABASE_URL     = <from step 1.4>
    SUPABASE_SERVICE_KEY = <service_role key>
    ```
@@ -80,7 +80,7 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
    ```
    NEXT_PUBLIC_API_URL   = https://<your-api>.onrender.com/api/v1
    NEXT_PUBLIC_WS_URL    = wss://<your-api>.onrender.com
-   NEXT_PUBLIC_SITE_URL  = https://<your-vercel-domain>
+   NEXT_PUBLIC_SITE_URL  = https://www.infludubai.com
    ```
 
    `NEXT_PUBLIC_SITE_URL` drives canonical URLs, `sitemap.xml`, `robots.txt` and

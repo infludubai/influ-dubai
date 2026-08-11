@@ -6,7 +6,12 @@ import type { Metadata } from "next";
  * silently breaks link previews and canonicalisation in production.
  */
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3002"
+  // Default to the real production domain: a build without the env var must
+  // never emit localhost canonicals or sitemap entries.
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.NODE_ENV === "production"
+    ? "https://www.infludubai.com"
+    : "http://localhost:3002")
 ).replace(/\/$/, "");
 
 export const SITE_NAME = "InfluDubai AI";
