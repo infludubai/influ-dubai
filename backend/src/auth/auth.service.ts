@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
@@ -25,6 +26,8 @@ export interface AuthTokens {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
@@ -39,7 +42,10 @@ export class AuthService {
       throw new ConflictException('An account with this email already exists.');
     }
 
-    const role = await this.prisma.role.findUniqueOrThrow({ where: { name: dto.role } });
+    const roleName = (await this.shouldBootstrapAsAdmin(dto.email))
+      ? 'ADMIN'
+      : dto.role;
+    const role = await this.prisma.role.findUniqueOrThrow({ where: { name: roleName } });
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
     const user = await this.prisma.user.create({
@@ -56,11 +62,35 @@ export class AuthService {
       include: { profile: true, role: true },
     });
 
+    if (roleName === 'ADMIN') {
+      this.logger.warn(
+        `Bootstrapped ${user.email} as the first ADMIN via BOOTSTRAP_ADMIN_EMAIL. ` +
+          'Clear that variable now — it is inert while an admin exists, but leaving it set is untidy.',
+      );
+    }
+
     // Someone may have been invited to a workspace before they had an account;
     // claim those now so they land straight in the team.
     await this.workspaces.claimInvitations(user.id, user.email);
 
     return this.toPublicUser(user);
+  }
+
+  /**
+   * One-time admin bootstrap for a fresh deployment with no shell access.
+   *
+   * Only fires when BOOTSTRAP_ADMIN_EMAIL matches AND the platform has no
+   * administrator at all, so it cannot be replayed to escalate a later signup
+   * — once the first admin exists the variable is permanently inert.
+   */
+  private async shouldBootstrapAsAdmin(email: string): Promise<boolean> {
+    const configured = this.config.get<string>('BOOTSTRAP_ADMIN_EMAIL')?.trim().toLowerCase();
+    if (!configured || configured !== email.trim().toLowerCase()) return false;
+
+    const adminCount = await this.prisma.user.count({
+      where: { role: { name: 'ADMIN' } },
+    });
+    return adminCount === 0;
   }
 
   async login(dto: LoginDto): Promise<AuthTokens & { user: ReturnType<AuthService['toPublicUser']> }> {
