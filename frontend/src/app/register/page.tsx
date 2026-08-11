@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Eye, EyeOff, ArrowRight, Loader2, Sparkles, Building2, Briefcase } from "lucide-react";
 import { AuthShell } from "@/components/auth-shell";
 import { api, ApiError } from "@/lib/api";
+import { useAuthStore } from "@/lib/auth-store";
 
 const ROLES = [
   { value: "CREATOR", label: "Creator", desc: "I create content & collaborate with brands", icon: Sparkles, color: "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-400 hover:bg-violet-500/10" },
@@ -29,6 +30,7 @@ function RegisterForm() {
   const searchParams = useSearchParams();
   const requestedRole = searchParams.get("role");
   const defaultRole = ROLES.some((r) => r.value === requestedRole) ? (requestedRole as FormValues["role"]) : undefined;
+  const setSession = useAuthStore((s) => s.setSession);
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPw, setShowPw] = useState(false);
@@ -43,8 +45,12 @@ function RegisterForm() {
     setServerError(null);
     setSubmitting(true);
     try {
+      // Accounts are active immediately — sign the new user straight in and
+      // land them in onboarding rather than a "check your email" dead end.
       await api.register(values);
-      router.push(`/verify-email?pending=${encodeURIComponent(values.email)}`);
+      const session = await api.login({ email: values.email, password: values.password });
+      setSession(session);
+      router.push("/onboarding");
     } catch (err) {
       setServerError(err instanceof ApiError ? err.message : "Something went wrong.");
     } finally {

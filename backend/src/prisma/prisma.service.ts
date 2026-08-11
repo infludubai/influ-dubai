@@ -30,6 +30,16 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           update: {},
         });
       }
+
+      // Email verification was removed — activate anyone who registered while
+      // the pending state still existed, so no account stays stuck in limbo.
+      const activated = await this.user.updateMany({
+        where: { status: 'PENDING_VERIFICATION' },
+        data: { status: 'ACTIVE' },
+      });
+      if (activated.count > 0) {
+        this.logger.log(`Auto-activated ${activated.count} pending account(s)`);
+      }
     } catch (err) {
       // Boot should not die over this — but signups will fail until it heals,
       // so make the cause loud in the logs.

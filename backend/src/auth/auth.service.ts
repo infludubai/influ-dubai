@@ -47,6 +47,10 @@ export class AuthService {
         email: dto.email,
         passwordHash,
         roleId: role.id,
+        // Accounts are active immediately — no email-verification step.
+        // Signup friction costs a marketplace more than unverified emails do;
+        // the verify-email endpoint remains for any old links in flight.
+        status: 'ACTIVE',
         profile: { create: { displayName: dto.displayName } },
       },
       include: { profile: true, role: true },
@@ -55,8 +59,6 @@ export class AuthService {
     // Someone may have been invited to a workspace before they had an account;
     // claim those now so they land straight in the team.
     await this.workspaces.claimInvitations(user.id, user.email);
-
-    await this.sendVerificationEmail(user.id, user.email);
 
     return this.toPublicUser(user);
   }
