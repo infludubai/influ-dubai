@@ -207,7 +207,9 @@ export class AuthService {
       { sub: userId, role: roleName },
       {
         secret: this.config.get('JWT_ACCESS_SECRET'),
-        expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN'),
+        // jsonwebtoken throws on an explicit undefined expiresIn, which turns
+        // every login into a 500 when the env var is absent — default it.
+        expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN') ?? '15m',
       },
     );
 
