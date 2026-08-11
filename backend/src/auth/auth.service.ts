@@ -151,7 +151,7 @@ export class AuthService {
           expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MINUTES * 60 * 1000),
         },
       });
-      const link = `${this.config.get('FRONTEND_URL')}/reset-password?token=${raw}`;
+      const link = `${this.config.get('FRONTEND_URL') ?? 'https://www.infludubai.com'}/reset-password?token=${raw}`;
       await this.mail.sendPasswordResetEmail(user.email, link);
     }
     // Same response whether or not the email is registered (avoids account enumeration).
@@ -198,7 +198,7 @@ export class AuthService {
         expiresAt: new Date(Date.now() + EMAIL_VERIFICATION_TTL_HOURS * 60 * 60 * 1000),
       },
     });
-    const link = `${this.config.get('FRONTEND_URL')}/verify-email?token=${raw}`;
+    const link = `${this.config.get('FRONTEND_URL') ?? 'https://www.infludubai.com'}/verify-email?token=${raw}`;
     await this.mail.sendVerificationEmail(email, link);
   }
 

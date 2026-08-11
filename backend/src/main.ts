@@ -41,10 +41,23 @@ async function bootstrap() {
   // Never leak stack traces to clients; log them with a traceable reference.
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3002')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
+  // The production domains are not secrets — baking them in as defaults means
+  // a mis-saved dashboard env var can never take the real site down. Extra
+  // origins can still be added via ALLOWED_ORIGINS without a deploy.
+  const allowedOrigins = [
+    ...new Set(
+      [
+        ...(process.env.ALLOWED_ORIGINS ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        'https://www.infludubai.com',
+        'https://infludubai.com',
+        'https://infludubai.vercel.app',
+        ...(process.env.NODE_ENV !== 'production' ? ['http://localhost:3002'] : []),
+      ],
+    ),
+  ];
 
   app.enableCors({
     origin: (origin, cb) => {

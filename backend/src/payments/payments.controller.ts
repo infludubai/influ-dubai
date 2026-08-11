@@ -68,7 +68,7 @@ export class PaymentsController {
     @Param('campaignId') campaignId: string,
     @Body() dto: FundCampaignDto,
   ) {
-    const base = process.env.FRONTEND_URL ?? 'http://localhost:3002';
+    const base = process.env.FRONTEND_URL ?? 'https://www.infludubai.com';
     return this.payments.fundCampaign(user.id, campaignId, dto.amountUsd, {
       successUrl: dto.successUrl ?? `${base}/dashboard/brand/campaigns/${campaignId}?funded=1`,
       cancelUrl: dto.cancelUrl ?? `${base}/dashboard/brand/campaigns/${campaignId}`,

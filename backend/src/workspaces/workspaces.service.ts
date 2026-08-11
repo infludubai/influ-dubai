@@ -306,7 +306,7 @@ export class WorkspacesService {
         link: '/dashboard/brand/team',
       });
     } else {
-      const base = this.settings.get('FRONTEND_URL') ?? 'http://localhost:3002';
+      const base = this.settings.get('FRONTEND_URL') ?? 'https://www.infludubai.com';
       await this.mail.sendVerificationEmail(
         normalised,
         `${base}/register?email=${encodeURIComponent(normalised)}&role=BRAND`,
