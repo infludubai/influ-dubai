@@ -72,7 +72,10 @@ jobs:
             fs.writeFileSync('bundle/package.json', JSON.stringify({
               name: 'infludubai', version: '1.0.0', private: true,
               main: 'server.js',
-              scripts: { start: 'node server.js' },
+              // V8 sizes its heap from the host machine, not the container
+              // limit, so on a small plan it happily grows until the
+              // container is killed. Capping it makes V8 collect instead.
+              scripts: { start: 'node --max-old-space-size=320 server.js' },
               engines: { node: '>=20' }
             }, null, 2) + '\n');
           "

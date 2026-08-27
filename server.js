@@ -216,6 +216,60 @@ async function mountWeb(root) {
 }
 
 /**
+ * Resident memory, for the boot log.
+ *
+ * A container that runs out of memory kills the process without a stack trace
+ * or an exit message, which looks identical to a mysterious restart. Printing
+ * the footprint at each stage turns that into something readable.
+ */
+function rss() {
+  return `rss ${Math.round(process.memoryUsage().rss / 1048576)}MB`;
+}
+
+
+/**
+ * Makes an abrupt exit say something.
+ *
+ * A container that kills the process for memory, or a rejected promise nobody
+ * awaited, both look the same from outside: the app simply restarts with no
+ * explanation. These handlers cost nothing and turn that into a line in the
+ * log naming what happened.
+ */
+function reportUnexpectedExits() {
+  process.on('uncaughtException', (err) => {
+    console.error('[server] uncaught exception:', err);
+    process.exit(1);
+  });
+  process.on('unhandledRejection', (err) => {
+    console.error('[server] unhandled rejection:', err);
+  });
+  for (const signal of ['SIGTERM', 'SIGINT']) {
+    process.on(signal, () => {
+      console.error(`[server] received ${signal} — the host is stopping this process (${rss()})`);
+      process.exit(0);
+    });
+  }
+  process.on('exit', (code) => console.error(`[server] exiting with code ${code} (${rss()})`));
+}
+
+/**
+ * Runs a boot step with a deadline.
+ *
+ * Neither half of the app should take a minute to mount. If one does, saying
+ * so beats a log that simply stops.
+ */
+function withDeadline(label, ms, work) {
+  let timer;
+  const warn = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error(`${label} did not finish within ${ms}ms`)),
+      ms,
+    );
+  });
+  return Promise.race([work, warn]).finally(() => clearTimeout(timer));
+}
+
+/**
  * A holding page for requests that arrive before the app has finished booting.
  *
  * Returns 200, not 503, deliberately: the host polls the port to decide
@@ -238,6 +292,7 @@ function serveStarting(res) {
 
 async function main() {
   const root = __dirname;
+  reportUnexpectedExits();
 
   // Bind before doing any work.
   //
@@ -250,9 +305,34 @@ async function main() {
   let web = null;
 
   const server = http.createServer((req, res) => {
-    if (!api || !web) return serveStarting(res);
-    if (isApi(req.url || '')) api.emit('request', req, res);
-    else web(req, res);
+    const url = req.url || '';
+
+    // Answers from the moment the port is bound, so what is up can always be
+    // established directly rather than inferred from a truncated log.
+    if (url === '/__status' || url.startsWith('/__status?')) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      return res.end(
+        JSON.stringify({
+          api: Boolean(api),
+          web: Boolean(web),
+          rssMb: Math.round(process.memoryUsage().rss / 1048576),
+          uptimeSeconds: Math.round(process.uptime()),
+          node: process.version,
+        }),
+      );
+    }
+
+    // Each half goes live on its own. Waiting for both meant a working API sat
+    // idle behind a holding page whenever the site was the slow one.
+    if (isApi(url)) {
+      if (!api) {
+        res.writeHead(503, { 'Content-Type': 'application/json', 'Retry-After': '5' });
+        return res.end('{"message":"The API is still starting."}');
+      }
+      return api.emit('request', req, res);
+    }
+    if (!web) return serveStarting(res);
+    return web(req, res);
   });
 
   // Socket.io's handshake starts as an HTTP request and then upgrades; only
@@ -263,7 +343,7 @@ async function main() {
   });
 
   await new Promise((resolve) => server.listen(PUBLIC_PORT, resolve));
-  console.log(`[server] listening on :${PUBLIC_PORT} — booting`);
+  console.log(`[server] listening on :${PUBLIC_PORT} — booting (${rss()})`);
 
   // Build the connection string from the host's DB_* variables before anything
   // reads it — the probe, the migration and the API all depend on
@@ -273,15 +353,16 @@ async function main() {
   // from a bad host, and that distinction decides the fix.
   await reportConnectivity(process.env.DATABASE_URL);
   await runMigrations(root);
+  console.log(`[server] migrations done (${rss()})`);
 
   const startedAt = Date.now();
   // Sequential, not parallel: on a small container both halves competing for
   // CPU and memory is what makes a cold start slow enough to be a problem.
   // The API first, so /api/v1 works as early as possible.
-  api = await mountApi(root);
-  console.log(`[server] API mounted (${Date.now() - startedAt}ms)`);
-  web = await mountWeb(root);
-  console.log(`[server] site mounted (${Date.now() - startedAt}ms total) — ready`);
+  api = await withDeadline('API', 120000, mountApi(root));
+  console.log(`[server] API mounted (${Date.now() - startedAt}ms, ${rss()})`);
+  web = await withDeadline('site', 120000, mountWeb(root));
+  console.log(`[server] site mounted (${Date.now() - startedAt}ms total, ${rss()}) — ready`);
 }
 
 main().catch((err) => {
