@@ -6,7 +6,7 @@ import { SettingsService } from '../settings/settings.service';
 /**
  * Liveness and readiness endpoints for the host's health checks.
  *
- * Throttling is skipped deliberately: Render polls these on a fixed interval
+ * Throttling is skipped deliberately: the host polls these on a fixed interval
  * and a rate-limited 429 would be read as an outage and cycle the instance.
  */
 @SkipThrottle()
@@ -46,7 +46,8 @@ export class HealthController {
 
     // Optional integrations report status without failing readiness — the
     // platform is designed to run degraded rather than refuse traffic.
-    checks.storage = { ok: this.settings.has('SUPABASE_URL') };
+    // Uploads go to the app’s own disk, which exists wherever it runs.
+    checks.storage = { ok: true };
     checks.ai = { ok: this.settings.has('OPENAI_API_KEY') };
     checks.billing = { ok: this.settings.has('STRIPE_SECRET_KEY') };
     checks.email = { ok: this.settings.has('SMTP_HOST') };

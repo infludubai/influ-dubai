@@ -255,7 +255,7 @@ export interface PublicPlan {
   support: string;
 }
 
-export type SettingGroupId = "openai" | "stripe" | "supabase" | "smtp" | "platform";
+export type SettingGroupId = "openai" | "stripe" | "smtp" | "platform";
 
 export interface PlatformSettingGroup {
   id: SettingGroupId;

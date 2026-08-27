@@ -5,8 +5,8 @@ import { Logger } from '@nestjs/common';
  *
  * Required vars abort the boot with an actionable message — far cheaper to
  * diagnose than a 500 on the first request in production. Optional vars only
- * warn: the platform is designed to degrade (mock AI, mock billing, uploads
- * disabled) rather than refuse to start.
+ * warn: the platform is designed to degrade (mock AI, mock billing) rather
+ * than refuse to start.
  */
 
 const REQUIRED = [
@@ -15,8 +15,6 @@ const REQUIRED = [
 ] as const;
 
 const OPTIONAL = [
-  { key: 'SUPABASE_URL', feature: 'file uploads' },
-  { key: 'SUPABASE_SERVICE_KEY', feature: 'file uploads' },
   { key: 'OPENAI_API_KEY', feature: 'AI insights & fraud scoring (falls back to rule-based)' },
   { key: 'STRIPE_SECRET_KEY', feature: 'billing (falls back to mock mode)' },
   { key: 'SMTP_HOST', feature: 'transactional email (falls back to console logging)' },

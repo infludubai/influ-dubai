@@ -9,14 +9,13 @@ import {
   type SettingGroupId,
 } from "@/lib/api";
 import {
-  Sparkles, CreditCard, HardDrive, Mail, SlidersHorizontal,
+  Sparkles, CreditCard, Mail, SlidersHorizontal,
   Eye, EyeOff, Check, X, Loader2, ExternalLink, Save, AlertTriangle,
 } from "lucide-react";
 
 const GROUP_ICON: Record<SettingGroupId, React.ElementType> = {
   openai: Sparkles,
   stripe: CreditCard,
-  supabase: HardDrive,
   smtp: Mail,
   platform: SlidersHorizontal,
 };

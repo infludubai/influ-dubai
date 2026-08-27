@@ -27,8 +27,14 @@ const path = require('node:path');
 
 const PUBLIC_PORT = Number(process.env.PORT || 8080);
 
-/** Everything else belongs to Next.js. */
-const API_PREFIXES = ['/api/v1', '/socket.io'];
+/**
+ * Everything else belongs to Next.js.
+ *
+ * /uploads is Nest's too: avatars, logos and media kits are written to the
+ * app's own disk and served by its static handler, so those requests must not
+ * fall through to Next.js.
+ */
+const API_PREFIXES = ['/api/v1', '/socket.io', '/uploads'];
 const isApi = (url) =>
   API_PREFIXES.some((p) => url === p || url.startsWith(p + '/') || url.startsWith(p + '?'));
 

@@ -20,7 +20,6 @@ export interface SettingDefinition {
 export type SettingGroupId =
   | 'openai'
   | 'stripe'
-  | 'supabase'
   | 'smtp'
   | 'platform';
 
@@ -48,14 +47,6 @@ export const SETTING_GROUPS: SettingGroup[] = [
     description:
       'Subscription billing and creator payouts. Without a key billing runs in mock mode and no real charges are made.',
     docsUrl: 'https://dashboard.stripe.com/apikeys',
-    testable: true,
-  },
-  {
-    id: 'supabase',
-    title: 'Supabase Storage',
-    description:
-      'Stores avatars, brand logos and media kits. Without credentials all file uploads are disabled.',
-    docsUrl: 'https://supabase.com/dashboard/project/_/settings/api',
     testable: true,
   },
   {
@@ -120,23 +111,6 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     group: 'stripe',
     isSecret: false,
     placeholder: 'price_…',
-  },
-
-  // ── Supabase ──────────────────────────────────────────────────────────────
-  {
-    key: 'SUPABASE_URL',
-    label: 'Project URL',
-    group: 'supabase',
-    isSecret: false,
-    placeholder: 'https://xxxxxxxx.supabase.co',
-  },
-  {
-    key: 'SUPABASE_SERVICE_KEY',
-    label: 'Service role key',
-    group: 'supabase',
-    isSecret: true,
-    placeholder: 'eyJhbGciOi…',
-    help: 'Use the service_role key, not the anon key. It bypasses row-level security, so it must never reach the browser.',
   },
 
   // ── SMTP ──────────────────────────────────────────────────────────────────

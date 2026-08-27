@@ -23,7 +23,7 @@ export async function createApp(): Promise<NestExpressApplication> {
   // Runs after creation so ConfigModule has already merged .env into process.env.
   validateEnv();
 
-  // Behind Render/Vercel the socket address is the proxy, not the client.
+  // Behind a hosting proxy the socket address is the proxy, not the client.
   // Without this every visitor shares one rate-limit bucket and a single
   // busy user can lock everyone else out.
   app.set('trust proxy', 1);
@@ -86,7 +86,7 @@ export async function createApp(): Promise<NestExpressApplication> {
   });
 
   // Lets Prisma close its pool and in-flight requests drain on SIGTERM,
-  // which is how Render stops an instance during a deploy.
+  // which is how the host stops an instance during a deploy.
   app.enableShutdownHooks();
 
   logger.log(`Allowed origins: ${allowedOrigins.join(', ')}`);

@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { createClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 import Stripe from 'stripe';
 import { SettingsService } from './settings.service';
@@ -28,8 +27,6 @@ export class SettingsTester {
           return await this.testOpenAi();
         case 'stripe':
           return await this.testStripe();
-        case 'supabase':
-          return await this.testSupabase();
         case 'smtp':
           return this.testSmtp();
         default:
@@ -76,29 +73,6 @@ export class SettingsTester {
       message: `Connected in ${mode} mode${
         currencies.length ? ` (balance currencies: ${currencies.join(', ')})` : ''
       }.`,
-    };
-  }
-
-  private async testSupabase(): Promise<TestResult> {
-    const url = this.settings.get('SUPABASE_URL');
-    const key = this.settings.get('SUPABASE_SERVICE_KEY');
-    if (!url || !key) {
-      return { ok: false, message: 'Project URL and service key are both required.' };
-    }
-
-    const client = createClient(url, key);
-    const { data, error } = await client.storage.listBuckets();
-    if (error) return { ok: false, message: error.message };
-
-    const names = data.map((b) => b.name);
-    const required = ['avatars', 'logos', 'media-kits'];
-    const missing = required.filter((b) => !names.includes(b));
-
-    return {
-      ok: missing.length === 0,
-      message: missing.length
-        ? `Connected, but these buckets are missing: ${missing.join(', ')}. Create them in Supabase → Storage and mark them public.`
-        : `Connected. All three storage buckets exist.`,
     };
   }
 

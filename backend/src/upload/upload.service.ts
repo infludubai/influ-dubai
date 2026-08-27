@@ -1,54 +1,29 @@
-import {
-  Injectable,
-  Logger,
-  ServiceUnavailableException,
-  InternalServerErrorException,
-} from '@nestjs/common';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { Injectable, Logger, InternalServerErrorException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { promises as fs } from 'fs';
 import * as path from 'path';
-import { SettingsService } from '../settings/settings.service';
 
 export type UploadBucket = 'avatars' | 'media-kits' | 'logos';
 
+/**
+ * Stores uploads on the application's own disk.
+ *
+ * GoDaddy keeps uploaded files across deploys — "re-uploading code or pulling
+ * from GitHub never deletes them" — so there is no reason to depend on an
+ * external object store for avatars, logos and media kits. Serving them from
+ * the same origin as the site also means no CORS and no public bucket to
+ * misconfigure.
+ *
+ * main.ts exposes this directory at /uploads.
+ */
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
-  private client: SupabaseClient | null = null;
-  private clientKey = '';
+  private readonly root = path.join(process.cwd(), 'uploads');
 
-  constructor(private readonly settings: SettingsService) {}
-
+  /** Local disk is always available; kept so callers need no special-casing. */
   isConfigured(): boolean {
-    const { url, key } = this.credentials();
-    return Boolean(url && key);
-  }
-
-  private credentials() {
-    return {
-      url: this.settings.get('SUPABASE_URL') ?? '',
-      key: this.settings.get('SUPABASE_SERVICE_KEY') ?? '',
-    };
-  }
-
-  /**
-   * Built on first use rather than at construction, so the app still boots
-   * without storage credentials — only the upload endpoints degrade. The
-   * cached client is rebuilt if the credentials change at runtime.
-   */
-  private supabase(): SupabaseClient {
-    const { url, key } = this.credentials();
-    if (!this.isConfigured()) {
-      throw new ServiceUnavailableException(
-        'File storage is not configured. Add Supabase credentials in Admin → Settings → Integrations.',
-      );
-    }
-    const fingerprint = `${url}:${key}`;
-    if (!this.client || this.clientKey !== fingerprint) {
-      this.client = createClient(url, key);
-      this.clientKey = fingerprint;
-    }
-    return this.client;
+    return true;
   }
 
   async uploadFile(
@@ -56,30 +31,22 @@ export class UploadService {
     originalName: string,
     bucket: UploadBucket,
   ): Promise<string> {
-    const client = this.supabase();
-    const ext = path.extname(originalName).toLowerCase();
+    // The name comes from the client, so only the extension is trusted — and
+    // only after stripping any path it may be carrying.
+    const ext = path.extname(path.basename(originalName)).toLowerCase();
     const fileName = `${randomUUID()}${ext}`;
+    const dir = path.join(this.root, bucket);
 
-    const { error } = await client.storage.from(bucket).upload(fileName, buffer, {
-      contentType: this.mimeType(ext),
-      upsert: false,
-    });
+    try {
+      await fs.mkdir(dir, { recursive: true });
+      await fs.writeFile(path.join(dir, fileName), buffer);
+    } catch (err) {
+      this.logger.error(`Could not store upload: ${(err as Error).message}`);
+      throw new InternalServerErrorException('Could not store the uploaded file.');
+    }
 
-    if (error) throw new InternalServerErrorException(error.message);
-
-    const { data } = client.storage.from(bucket).getPublicUrl(fileName);
-    return data.publicUrl;
-  }
-
-  private mimeType(ext: string): string {
-    const map: Record<string, string> = {
-      '.jpg': 'image/jpeg',
-      '.jpeg': 'image/jpeg',
-      '.png': 'image/png',
-      '.webp': 'image/webp',
-      '.gif': 'image/gif',
-      '.pdf': 'application/pdf',
-    };
-    return map[ext] ?? 'application/octet-stream';
+    // Relative on purpose: the site and its API are one origin, so this URL is
+    // correct on every domain the app is served from.
+    return `/uploads/${bucket}/${fileName}`;
   }
 }
