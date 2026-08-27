@@ -8,8 +8,11 @@
  * copy into a dashboard by hand — and nothing to re-do when the host rotates
  * the password.
  *
- * An explicitly set DATABASE_URL always wins, so local development and any
- * other host keep working unchanged.
+ * An explicitly set DATABASE_URL wins, so local development and any other host
+ * keep working unchanged — but only if it is actually a MySQL URL. A stale
+ * postgresql:// value left over from a previous host would otherwise be handed
+ * to Prisma, which rejects it against a mysql provider and takes the whole app
+ * down, while a perfectly good database sits behind DB_HOST.
  */
 
 /** Host panels are inconsistent about naming, so accept the usual spellings. */
@@ -34,20 +37,45 @@ function pick(keys) {
  * Returns a short description of what happened, for logging.
  */
 function resolveDatabaseUrl() {
-  if (process.env.DATABASE_URL?.trim()) {
-    return 'DATABASE_URL was already set — using it as-is';
-  }
+  const existing = process.env.DATABASE_URL?.trim();
 
   const found = Object.fromEntries(
     Object.entries(ALIASES).map(([part, keys]) => [part, pick(keys)]),
   );
 
-  const required = ['host', 'name', 'user', 'password'];
-  const missing = required.filter((part) => !found[part]);
-  if (missing.length > 0) {
-    if (!found.host && missing.length === required.length) {
-      return 'no DATABASE_URL and no DB_* variables — nothing to compose';
+  if (existing) {
+    if (existing.startsWith('mysql://')) {
+      return 'DATABASE_URL was already set — using it as-is';
     }
+    // Not MySQL. Only override when there is something to override it with;
+    // otherwise leave it in place so the error names the real problem.
+    if (!found.host) {
+      return (
+        'DATABASE_URL is set but is not a mysql:// URL, and there are no DB_* ' +
+        'variables to build one from — the app expects MySQL and will fail to start.'
+      );
+    }
+    const scheme = existing.slice(0, Math.max(0, existing.indexOf('://')));
+    delete process.env.DATABASE_URL;
+    const composed = compose(found);
+    return (
+      `ignoring a stale ${scheme || 'unrecognised'}:// DATABASE_URL — the app is MySQL now. ` +
+      (composed ?? 'and DB_* is incomplete, so nothing could be composed')
+    );
+  }
+
+  return (
+    compose(found) ?? 'no DATABASE_URL and no DB_* variables — nothing to compose'
+  );
+}
+
+const REQUIRED = ['host', 'name', 'user', 'password'];
+
+/** Sets process.env.DATABASE_URL from the parts, or explains what is missing. */
+function compose(found) {
+  const missing = REQUIRED.filter((part) => !found[part]);
+  if (missing.length > 0) {
+    if (!found.host && missing.length === REQUIRED.length) return null;
     return (
       'cannot compose DATABASE_URL — missing ' +
       missing.map((p) => ALIASES[p][0]).join(', ') +
@@ -67,7 +95,7 @@ function resolveDatabaseUrl() {
 
   process.env.DATABASE_URL = url;
   // Names only — never the values.
-  const usedKeys = required
+  const usedKeys = REQUIRED
     .map((p) => found[p].key)
     .concat(found.port ? [found.port.key] : ['DB_PORT (default 3306)']);
   return `composed DATABASE_URL from ${usedKeys.join(', ')} -> mysql://${found.host.value}:${port}/${found.name.value}`;

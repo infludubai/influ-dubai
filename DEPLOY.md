@@ -2,24 +2,60 @@
 
 ## Architecture
 
+The whole platform runs as **one Node process on GoDaddy**, backed by
+GoDaddy's own MySQL:
+
 ```
-Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + Storage)
+GoDaddy Node.js hosting (one process, one port)
+  ├── server.js — supervisor + reverse proxy
+  │     /api/v1/*, /socket.io/*  ->  NestJS API
+  │     everything else          ->  Next.js
+  └── GoDaddy MySQL (private network, :3306)
 ```
 
-| Service | Provider | Why |
+| Piece | Where | Why |
 |---|---|---|
-| Frontend | Vercel | Next.js 15, edge CDN, preview deploys |
-| Backend API | Render | NestJS needs a long-running server — Socket.io messaging can't run on serverless functions |
-| Database | Supabase | Managed Postgres, free tier, same vendor as storage |
-| File storage | Supabase Storage | Avatars, brand logos, media kits |
+| Frontend + API | One GoDaddy Node app | Same origin, so there is no CORS to misconfigure, and Socket.io messaging keeps a persistent server |
+| Database | GoDaddy MySQL | GoDaddy's sandbox blocks outbound database ports entirely — a probe from inside it returns `EACCES` on 5432/6543 while :443 is reachable. No external database (Supabase, Neon, PlanetScale) can be reached from there, so the host's own MySQL is the only option |
+| File storage | Supabase Storage (optional) | Uploads degrade to a 503 when unset; everything else boots normally |
 
-> **Why not Supabase for the API too?** Supabase's only compute is Deno Edge
-> Functions. The API is a stateful NestJS app with WebSocket messaging, so it
-> needs a persistent host.
+### How a deploy happens
+
+GoDaddy's build sandbox writes incomplete `node_modules` — five separate
+builds each failed on a different missing file. So nothing is built on
+GoDaddy. Instead:
+
+1. Push to `master`.
+2. `.github/workflows/deploy-bundle.yml` builds both apps on GitHub Actions,
+   prunes to runtime dependencies, and force-pushes a ready-to-run `bundle/`
+   to the **`deploy`** branch as a single orphan commit.
+3. In the GoDaddy panel, **Retry build** (or **Update Preview**) pulls
+   `deploy`. The root `package.json` there has no dependencies, so GoDaddy's
+   `npm install` has nothing to do — which is the entire point.
+4. `server.js` runs `prisma migrate deploy` at boot, then starts both apps.
+
+### The database connection
+
+There is **no connection string to paste anywhere**. `database-url.js`
+composes `DATABASE_URL` at boot from the variables GoDaddy injects —
+`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` — URL-encoding each
+part, so a password containing `@ : / #` is handled correctly. If any part is
+missing the startup log names the exact variable rather than failing with a
+generic connection error.
+
+Setting `DATABASE_URL` explicitly always wins, which is how local development
+and any other host keep working.
 
 ---
 
-## 1. Supabase — database + storage
+## Previous setup — Vercel + Render + Supabase
+
+The sections below describe the earlier hosting arrangement. They are kept
+because the app still runs on it unchanged (Postgres is the one exception —
+the schema is MySQL now, so a Postgres deploy would need the provider
+switched back). Skip to *Post-deploy smoke test* if you are on GoDaddy.
+
+### 1. Supabase — database + storage
 
 1. [supabase.com](https://supabase.com) → **New project** → name `infludubai`, region **Frankfurt (eu-central-1)**. Save the database password.
 2. **Settings → Database → Connection string → URI.** Copy it — this is `DATABASE_URL`.
@@ -41,7 +77,7 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
 
 ---
 
-## 2. Render — the API
+### 2. Render — the API
 
 1. [render.com](https://render.com) → **New → Blueprint** → connect `infludubai/influ-dubai`.
    Render reads [`render.yaml`](render.yaml) and configures the service automatically.
@@ -71,7 +107,7 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
 
 ---
 
-## 3. Vercel — the frontend
+### 3. Vercel — the frontend
 
 1. [vercel.com](https://vercel.com) → **Add New → Project** → import `infludubai/influ-dubai`.
 2. **Root directory:** `frontend` (framework auto-detects as Next.js).
@@ -89,7 +125,7 @@ Vercel (Next.js frontend)  →  Render (NestJS API)  →  Supabase (Postgres + S
 
 ---
 
-## 4. Create your admin account
+## Create your admin account
 
 Run this from your machine, against the **direct** Supabase URI (port `5432`,
 not the pooler). Nothing is committed — the credentials come from your shell:
@@ -114,14 +150,14 @@ passwords under 12 characters and any password that appears in this repo.
 > marketplace, and creates an admin whose password is published in this
 > repository. It now refuses to run when `NODE_ENV=production`.
 
-## 5. Close the loop
+### Close the loop
 
 Set Render's `ALLOWED_ORIGINS` and `FRONTEND_URL` to the real Vercel domain,
 then redeploy the API.
 
 ---
 
-## 6. Configure integrations — no redeploy needed
+## Configure integrations — no redeploy needed
 
 Sign in as an admin and open **Admin → Settings → Integrations**. Keys entered
 here are encrypted with AES-256-GCM, take effect immediately, and override the
@@ -148,7 +184,7 @@ so this is required before billing works.
 
 ---
 
-## 7. Custom domain
+## Custom domain
 
 1. Vercel → Project → **Domains** → add `infludubai.com`, follow the DNS records.
 2. Update Render's `ALLOWED_ORIGINS` and `FRONTEND_URL` to the custom domain and redeploy.
@@ -156,7 +192,7 @@ so this is required before billing works.
 
 ---
 
-## 8. Post-deploy smoke test
+## Post-deploy smoke test
 
 - [ ] `/api/v1/health/ready` returns `database.ok = true`
 - [ ] Home, `/marketplace`, `/pricing`, `/how-it-works` load
@@ -171,11 +207,11 @@ so this is required before billing works.
 
 ## Environment variable reference
 
-### Backend (Render)
+### Backend
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `DATABASE_URL` | ✅ | Postgres connection string |
+| `DATABASE_URL` | ✅ | MySQL connection string. On GoDaddy it is composed from `DB_*` at boot — see *The database connection* above |
 | `JWT_ACCESS_SECRET` | ✅ | Signs access tokens (min 32 chars, enforced at boot) |
 | `JWT_ACCESS_EXPIRES_IN` | — | Access token lifetime, default `15m` |
 | `SETTINGS_ENCRYPTION_KEY` | Recommended | Encrypts admin-managed API keys |
@@ -189,7 +225,7 @@ so this is required before billing works.
 Required variables are validated at boot — the API exits with an actionable
 message rather than failing on the first request.
 
-### Frontend (Vercel)
+### Frontend
 
 | Variable | Required | Purpose |
 |---|---|---|
@@ -202,7 +238,7 @@ message rather than failing on the first request.
 ## Local development
 
 ```bash
-# Backend — needs Postgres on :5432
+# Backend — needs MySQL on :3306 (docker compose up db)
 cd backend && npm install && npx prisma migrate dev && npm run build && node dist/main.js
 
 # Frontend
