@@ -1,0 +1,99 @@
+# Builds the app and publishes a ready-to-run bundle to the `deploy` branch.
+#
+# GoDaddy's Node.js sandbox repeatedly fails partway through installing this
+# project's ~1,550 packages — three different packages (@babel/helpers,
+# prisma, sharp) have gone missing mid-install, with the sandbox logging
+# "skipping path=/app/node_modules". Rather than fight an installer we do not
+# control, everything is installed and compiled here, on Linux runners that
+# match the host's platform, and the finished tree is pushed to a branch the
+# host can run with no install step at all.
+#
+# The branch is rewritten as a single orphan commit each time so its history
+# never accumulates hundreds of megabytes of node_modules.
+name: Publish deploy bundle
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build backend
+        working-directory: backend
+        run: |
+          npm ci --include=dev
+          npx prisma generate
+          npm run build
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          # Baked in at build time. Relative API base keeps the site and its
+          # API same-origin behind the supervisor, so there is no CORS at all.
+          NEXT_PUBLIC_API_URL: /api/v1
+          NEXT_PUBLIC_SITE_URL: https://www.infludubai.ae
+          NODE_ENV: production
+        run: |
+          npm ci --include=dev
+          npm run build
+
+      - name: Prune backend to runtime dependencies
+        working-directory: backend
+        run: |
+          # The Prisma CLI is a devDependency but is needed at runtime for
+          # `migrate deploy`, so it is reinstalled after pruning.
+          npm prune --omit=dev
+          npm install --no-save --omit=dev prisma@$(node -p "require('./package.json').devDependencies.prisma.replace(/^[^0-9]*/,'')")
+
+      - name: Assemble bundle
+        run: |
+          rm -rf bundle && mkdir -p bundle
+          cp server.js bundle/
+          cp -r scripts bundle/scripts
+
+          # Root manifest with no dependencies: `npm install` on the host has
+          # nothing to do, which is the entire point.
+          node -e "
+            const fs = require('fs');
+            fs.writeFileSync('bundle/package.json', JSON.stringify({
+              name: 'infludubai', version: '1.0.0', private: true,
+              main: 'server.js',
+              scripts: { start: 'node server.js' },
+              engines: { node: '>=20' }
+            }, null, 2) + '\n');
+          "
+
+          mkdir -p bundle/backend
+          cp -r backend/dist bundle/backend/dist
+          cp -r backend/node_modules bundle/backend/node_modules
+          cp -r backend/prisma bundle/backend/prisma
+          cp backend/package.json bundle/backend/package.json
+          # prisma.config.ts is deliberately not shipped: without it the CLI
+          # falls back to prisma/schema.prisma and reads DATABASE_URL straight
+          # from the environment, so the runtime bundle needs no TypeScript
+          # loader and no dotenv.
+
+          mkdir -p bundle/frontend/.next
+          cp -r frontend/.next/standalone bundle/frontend/.next/standalone
+
+          echo "Bundle size: $(du -sh bundle | cut -f1)"
+
+      - name: Publish to deploy branch
+        run: |
+          cd bundle
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -q -b deploy
+          git add -A
+          git commit -q -m "Build of ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" deploy
