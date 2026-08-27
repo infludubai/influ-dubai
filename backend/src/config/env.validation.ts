@@ -10,7 +10,7 @@ import { Logger } from '@nestjs/common';
  */
 
 const REQUIRED = [
-  { key: 'DATABASE_URL', hint: 'PostgreSQL connection string' },
+  { key: 'DATABASE_URL', hint: 'MySQL connection string (composed from DB_* on GoDaddy)' },
   { key: 'JWT_ACCESS_SECRET', hint: 'secret used to sign access tokens' },
 ] as const;
 

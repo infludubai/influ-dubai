@@ -33,8 +33,8 @@ export class AdminService {
     const where: any = {};
     if (role) where.role = { name: role };
     if (search) where.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { profile: { displayName: { contains: search, mode: 'insensitive' } } },
+      { email: { contains: search } },
+      { profile: { displayName: { contains: search } } },
     ];
     const [users, total] = await Promise.all([
       this.prisma.user.findMany({

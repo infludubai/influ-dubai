@@ -18,6 +18,7 @@
 const http = require('node:http');
 const { spawn } = require('node:child_process');
 const { reportConnectivity } = require('./diagnostics');
+const { resolveDatabaseUrl } = require('./database-url');
 const path = require('node:path');
 
 const PUBLIC_PORT = Number(process.env.PORT || 8080);
@@ -104,7 +105,15 @@ function runMigrations(root) {
     const child = spawn(
       process.platform === 'win32' ? 'npx.cmd' : 'npx',
       ['prisma', 'migrate', 'deploy'],
-      { cwd: path.join(root, 'backend'), env: process.env, stdio: ['ignore', 'inherit', 'inherit'] },
+      {
+        cwd: path.join(root, 'backend'),
+        env: process.env,
+        stdio: ['ignore', 'inherit', 'inherit'],
+        // Node refuses to spawn .cmd shims directly on Windows (EINVAL) since
+        // the CVE-2024-27980 fix. Hosting is Linux, but this keeps the
+        // supervisor runnable locally for pre-deploy checks.
+        shell: process.platform === 'win32',
+      },
     );
     child.on('error', reject);
     child.on('exit', (code) =>
@@ -117,6 +126,10 @@ function runMigrations(root) {
 
 async function main() {
   const root = __dirname;
+  // Build the connection string from the host's DB_* variables before anything
+  // reads it — the probe, the migration and both child processes all depend on
+  // process.env.DATABASE_URL being final by this point.
+  console.log('[supervisor] ' + resolveDatabaseUrl());
   // Report egress before migrating: P1001 alone cannot tell a blocked port
   // from a bad host, and that distinction decides the fix.
   await reportConnectivity(process.env.DATABASE_URL);

@@ -9,6 +9,7 @@ import { UpsertCreatorProfileDto } from './dto/upsert-creator-profile.dto';
 import { UpsertSocialAccountDto } from './dto/upsert-social-account.dto';
 import { CreatePortfolioItemDto } from './dto/create-portfolio-item.dto';
 import { RoleName } from '@prisma/client';
+import { listHas } from '../common/json-array';
 
 @Injectable()
 export class CreatorsService {
@@ -71,14 +72,14 @@ export class CreatorsService {
     const skip = (page - 1) * limit;
 
     const where: any = { verificationStatus: { not: 'REJECTED' } };
-    if (category) where.categories = { has: category };
-    if (location) where.location = { contains: location, mode: 'insensitive' };
-    if (language) where.languages = { has: language };
+    if (category) where.categories = listHas(category);
+    if (location) where.location = { contains: location };
+    if (language) where.languages = listHas(language);
     if (minFollowers !== undefined) where.totalAudienceSize = { ...where.totalAudienceSize, gte: minFollowers };
     if (maxFollowers !== undefined) where.totalAudienceSize = { ...where.totalAudienceSize, lte: maxFollowers };
     if (minRate !== undefined) where.minRateUsd = { gte: minRate };
     if (maxRate !== undefined) where.maxRateUsd = { lte: maxRate };
-    if (q) where.bio = { contains: q, mode: 'insensitive' };
+    if (q) where.bio = { contains: q };
 
     const safeUserSelect = {
       profile: { select: { displayName: true, avatarUrl: true, country: true, city: true } },

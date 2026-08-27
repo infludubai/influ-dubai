@@ -2,6 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import OpenAI from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
+import { listHasSomeOr, toStringList } from '../common/json-array';
 
 export interface CreatorInsight {
   qualityScore: number;          // 0–100
@@ -94,8 +95,8 @@ Creator profile:
 - Name: ${creator.user?.profile?.displayName ?? 'Unknown'}
 - Bio: ${creator.bio ?? 'Not provided'}
 - Location: ${creator.location ?? 'Unknown'}
-- Categories: ${creator.categories.join(', ') || 'None'}
-- Languages: ${creator.languages.join(', ') || 'None'}
+- Categories: ${toStringList(creator.categories).join(', ') || 'None'}
+- Languages: ${toStringList(creator.languages).join(', ') || 'None'}
 - Total audience: ${totalAudience.toLocaleString()}
 - Rate range: $${creator.minRateUsd ?? 0} – $${creator.maxRateUsd ?? 'open'}
 - Social accounts: ${creator.socialAccounts.map(a => `${a.platform}(${a.followersCount ?? 0} followers, ${a.engagementRate ?? 0}% engagement)`).join(', ') || 'None'}
@@ -173,10 +174,10 @@ Return ONLY valid JSON with this exact shape:
     });
 
     // Count creators available in target categories
+    const targetCategories = toStringList(campaign.targetCategories);
+    const categoryMatch = listHasSomeOr('categories', targetCategories);
     const matchingCreators = await this.prisma.creatorProfile.count({
-      where: campaign.targetCategories.length
-        ? { categories: { hasSome: campaign.targetCategories } }
-        : {},
+      where: categoryMatch ? { OR: categoryMatch } : {},
     });
 
     // Rule-based prediction ─────────────────────────────────────
@@ -229,8 +230,8 @@ Campaign details:
 - Title: ${campaign.title}
 - Type: ${campaign.type}
 - Budget: $${budget.toLocaleString()} USD
-- Target categories: ${campaign.targetCategories.join(', ') || 'General'}
-- Target locations: ${campaign.targetLocations.join(', ') || 'UAE/MENA'}
+- Target categories: ${toStringList(campaign.targetCategories).join(', ') || 'General'}
+- Target locations: ${toStringList(campaign.targetLocations).join(', ') || 'UAE/MENA'}
 - Matching creators on platform: ${matchingCreators}
 - Historical data points: ${historical.length}
 
@@ -271,8 +272,8 @@ Return ONLY valid JSON:
       result.tips = [
         `Activate during peak Gulf engagement hours (7–10 PM GST) for up to 30% more reach`,
         `Target creators with 2–5% engagement rate for optimal CPE at your $${budget.toLocaleString()} budget`,
-        campaign.targetCategories.length
-          ? `Your ${campaign.targetCategories[0]} niche has strong brand affinity in UAE — lean into authentic storytelling`
+        toStringList(campaign.targetCategories).length
+          ? `Your ${toStringList(campaign.targetCategories)[0]} niche has strong brand affinity in UAE — lean into authentic storytelling`
           : `Define target categories to improve creator matching and prediction accuracy`,
       ];
     }
@@ -299,7 +300,7 @@ Return ONLY valid JSON:
     if (!openai) return this.mockCampaignSuggestions(campaign, creators);
 
     const creatorList = creators.map((c, i) =>
-      `${i + 1}. id=${c.id} name="${c.user?.profile?.displayName ?? 'Creator'}" cats=[${c.categories.join(',')}] loc="${c.location ?? ''}" audience=${c.totalAudienceSize ?? 0} rate=$${c.minRateUsd ?? 0}-$${c.maxRateUsd ?? 0}`
+      `${i + 1}. id=${c.id} name="${c.user?.profile?.displayName ?? 'Creator'}" cats=[${toStringList(c.categories).join(',')}] loc="${c.location ?? ''}" audience=${c.totalAudienceSize ?? 0} rate=$${c.minRateUsd ?? 0}-$${c.maxRateUsd ?? 0}`
     ).join('\n');
 
     const prompt = `You are an influencer marketing strategist for UAE/MENA.
@@ -308,8 +309,8 @@ Campaign details:
 - Title: ${campaign.title}
 - Type: ${campaign.type}
 - Budget: $${campaign.budgetUsd}
-- Target categories: ${campaign.targetCategories.join(', ') || 'Any'}
-- Target locations: ${campaign.targetLocations.join(', ') || 'Any'}
+- Target categories: ${toStringList(campaign.targetCategories).join(', ') || 'Any'}
+- Target locations: ${toStringList(campaign.targetLocations).join(', ') || 'Any'}
 - Description: ${campaign.description ?? 'None'}
 
 Available creators:

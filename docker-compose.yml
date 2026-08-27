@@ -2,18 +2,21 @@ version: "3.9"
 
 services:
   db:
-    image: postgres:17-alpine
+    image: mysql:8.4
     restart: unless-stopped
     environment:
-      POSTGRES_DB: infludubai
-      POSTGRES_USER: infludubai_app
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-infludubai_dev_pw}
+      MYSQL_DATABASE: infludubai
+      MYSQL_USER: infludubai_app
+      MYSQL_PASSWORD: ${DB_PASSWORD:-infludubai_dev_pw}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-infludubai_dev_root}
+    # utf8mb4 end to end: creator bios and campaign briefs carry Arabic and emoji.
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     ports:
-      - "5432:5432"
+      - "3306:3306"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U infludubai_app -d infludubai"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -27,7 +30,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://infludubai_app:${DB_PASSWORD:-infludubai_dev_pw}@db:5432/infludubai
+      DATABASE_URL: mysql://infludubai_app:${DB_PASSWORD:-infludubai_dev_pw}@db:3306/infludubai
       JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-in-production}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-change-in-production}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3002}
@@ -55,5 +58,5 @@ services:
       - "3002:3000"
 
 volumes:
-  pgdata:
+  mysqldata:
   uploads:

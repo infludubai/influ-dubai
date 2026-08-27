@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -62,8 +62,8 @@ model Profile {
   bio         String?
   country     String?
   city        String?
-  languages   String[] @default([])
-  categories  String[] @default([])
+  languages   Json     @default("[]")
+  categories  Json     @default("[]")
   avatarUrl   String?  @map("avatar_url")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
@@ -163,8 +163,8 @@ model CreatorProfile {
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   bio                String?
   location           String?
-  languages          String[]           @default([])
-  categories         String[]           @default([])
+  languages          Json               @default("[]")
+  categories         Json               @default("[]")
   minRateUsd         Float?             @map("min_rate_usd")
   maxRateUsd         Float?             @map("max_rate_usd")
   totalAudienceSize  Int?               @map("total_audience_size")
@@ -174,7 +174,7 @@ model CreatorProfile {
   // Fraud detection fields
   fraudRiskScore     Float?             @map("fraud_risk_score")      // 0-100 (higher = riskier)
   fraudRiskLevel     String?            @map("fraud_risk_level")      // LOW | MEDIUM | HIGH
-  fraudFlags         String[]           @default([]) @map("fraud_flags")
+  fraudFlags         Json               @default("[]") @map("fraud_flags")
   fraudAnalyzedAt    DateTime?          @map("fraud_analyzed_at")
   socialAccounts     SocialAccount[]
   portfolioItems     PortfolioItem[]
@@ -202,7 +202,7 @@ model FraudReport {
   creator          CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
   riskScore        Float          @map("risk_score")
   riskLevel        String         @map("risk_level")
-  flags            String[]
+  flags            Json
   engagementAnom   Float?         @map("engagement_anomaly")
   followerAnom     Float?         @map("follower_anomaly")
   summary          String?
@@ -294,8 +294,8 @@ model Campaign {
   status          CampaignStatus @default(DRAFT)
   budgetUsd       Float          @map("budget_usd")
   targetAudience  String?        @map("target_audience")
-  targetLocations String[]       @default([]) @map("target_locations")
-  targetCategories String[]      @default([]) @map("target_categories")
+  targetLocations Json           @default("[]") @map("target_locations")
+  targetCategories Json          @default("[]") @map("target_categories")
   deadline        DateTime?
   requirements    String?
   invitations     CampaignInvitation[]

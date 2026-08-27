@@ -1,6 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import OpenAI from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
+import { toStringList } from '../common/json-array';
 import { SettingsService } from '../settings/settings.service';
 
 export type RiskLevel = 'LOW' | 'MEDIUM' | 'HIGH';
@@ -125,7 +126,7 @@ export class FraudService {
 
 Creator data:
 - Bio: ${creator.bio ?? 'none'}
-- Categories: ${creator.categories.join(', ') || 'none'}
+- Categories: ${toStringList(creator.categories).join(', ') || 'none'}
 - Social accounts: ${accounts.map(a => `${a.platform}: ${(a.followersCount ?? 0).toLocaleString()} followers, ${(a.engagementRate ?? 0).toFixed(2)}% engagement`).join(' | ')}
 - Rule-based flags found: ${flags.join('; ') || 'none'}
 - Current risk score: ${riskScore}/100
