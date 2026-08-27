@@ -82,6 +82,21 @@ jobs:
           cp -r backend/node_modules bundle/backend/node_modules
           cp -r backend/prisma bundle/backend/prisma
           cp backend/package.json bundle/backend/package.json
+
+          # GoDaddy's pull preserves existing files and only overlays the new
+          # ones, so migrations deleted in this repo survive on the host and
+          # get replayed. This manifest lets the supervisor prune whatever
+          # this build does not ship. See runMigrations() in server.js.
+          node -e "
+            const fs = require('fs');
+            const dir = 'bundle/backend/prisma/migrations';
+            const names = fs.readdirSync(dir, { withFileTypes: true })
+              .filter((e) => e.isDirectory())
+              .map((e) => e.name)
+              .sort();
+            fs.writeFileSync(dir + '/manifest.json', JSON.stringify({ migrations: names }, null, 2));
+            console.log('Migration manifest: ' + names.join(', '));
+          "
           # prisma.config.ts is deliberately not shipped: without it the CLI
           # falls back to prisma/schema.prisma and reads DATABASE_URL straight
           # from the environment, so the runtime bundle needs no TypeScript
