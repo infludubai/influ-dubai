@@ -9,6 +9,7 @@
  * Never logs credentials: only hostnames and port numbers.
  */
 const net = require('node:net');
+const http = require('node:http');
 
 function probePort(host, port, timeoutMs = 8000) {
   return new Promise((resolve) => {
@@ -66,4 +67,48 @@ async function reportConnectivity(databaseUrl) {
   }
 }
 
-module.exports = { probePort, reportConnectivity };
+
+/**
+ * Reports which local addresses the sandbox will let this process bind.
+ *
+ * The supervisor fronts two internal servers with one public listener, which
+ * needs two extra ports. GoDaddy refused one with 'listen EACCES 127.0.0.1',
+ * and that error alone cannot say whether the restriction is the interface,
+ * the port number, or "nothing but $PORT" — each implies a different fix.
+ * Binding is instant, so asking directly costs nothing.
+ */
+async function reportBindability(ports) {
+  const attempt = (host, port) =>
+    new Promise((resolve) => {
+      const server = http.createServer(() => {});
+      const done = (verdict) => {
+        server.removeAllListeners();
+        try {
+          server.close();
+        } catch {
+          /* already closed */
+        }
+        resolve(verdict);
+      };
+      server.once('error', (e) => done(`REFUSED - ${e.code || e.message}`));
+      server.once('listening', () => {
+        const actual = server.address();
+        done(`OK${port === 0 && actual ? ` (got :${actual.port})` : ''}`);
+      });
+      server.listen(port, host);
+    });
+
+  const targets = [];
+  for (const port of ports) {
+    targets.push(['0.0.0.0', port], ['127.0.0.1', port]);
+  }
+  // Port 0 asks the kernel for any free port: if even that is refused, the
+  // restriction is on binding at all, not on a particular number.
+  targets.push(['0.0.0.0', 0], ['127.0.0.1', 0]);
+
+  for (const [host, port] of targets) {
+    console.log(`[diagnostics] bind ${host}:${port} -> ${await attempt(host, port)}`);
+  }
+}
+
+module.exports = { probePort, reportConnectivity, reportBindability };

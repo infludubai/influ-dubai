@@ -17,7 +17,7 @@
  */
 const http = require('node:http');
 const { spawn } = require('node:child_process');
-const { reportConnectivity } = require('./diagnostics');
+const { reportConnectivity, reportBindability } = require('./diagnostics');
 const { resolveDatabaseUrl } = require('./database-url');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -25,6 +25,46 @@ const path = require('node:path');
 const PUBLIC_PORT = Number(process.env.PORT || 8080);
 const API_PORT = Number(process.env.INTERNAL_API_PORT || 44301);
 const WEB_PORT = Number(process.env.INTERNAL_WEB_PORT || 44302);
+
+/**
+ * Finds an address the sandbox will actually let the internal servers use.
+ *
+ * The two internal ports are an implementation detail — nothing outside the
+ * container ever connects to them — but a host still has to permit the bind.
+ * GoDaddy refused 127.0.0.1 outright ('listen EACCES'), so rather than betting
+ * on one address and one port number, ask the kernel what is allowed: the
+ * preferred interface first, then the other, then whatever ephemeral port it
+ * hands out. Only if all of that fails is the situation genuinely hopeless.
+ */
+function canBind(host, port) {
+  return new Promise((resolve) => {
+    const probe = http.createServer(() => {});
+    probe.once('error', () => resolve(null));
+    probe.once('listening', () => {
+      const assigned = probe.address().port;
+      probe.close(() => resolve(assigned));
+    });
+    probe.listen(port, host);
+  });
+}
+
+async function reserveInternal(preferredPort, label) {
+  for (const host of ['0.0.0.0', '127.0.0.1']) {
+    for (const port of [preferredPort, 0]) {
+      const assigned = await canBind(host, port);
+      if (assigned) {
+        if (host !== '0.0.0.0' || port !== preferredPort) {
+          console.log(`[supervisor] ${label}: using ${host}:${assigned}`);
+        }
+        return { host, port: assigned };
+      }
+    }
+  }
+  throw new Error(
+    `${label}: this host refuses every internal port bind, so the API and the ` +
+      'site cannot be fronted by one listener. See the [diagnostics] bind lines above.',
+  );
+}
 
 const API_PREFIXES = ['/api/v1', '/socket.io'];
 
@@ -231,19 +271,23 @@ async function main() {
   // from a bad host, and that distinction decides the fix.
   await reportConnectivity(process.env.DATABASE_URL);
   await runMigrations(root);
-  console.log(`[supervisor] starting API on :${API_PORT} and web on :${WEB_PORT}`);
 
-  start('api', path.join(root, 'backend', 'dist', 'main.js'), path.join(root, 'backend'), API_PORT);
-  start('web', path.join(root, 'frontend', '.next', 'standalone', 'server.js'), path.join(root, 'frontend', '.next', 'standalone'), WEB_PORT, { HOSTNAME: '127.0.0.1' });
+  await reportBindability([API_PORT, WEB_PORT]);
+  const api = await reserveInternal(API_PORT, 'API');
+  const web = await reserveInternal(WEB_PORT, 'web');
+  console.log(`[supervisor] starting API on ${api.host}:${api.port} and web on ${web.host}:${web.port}`);
 
-  await Promise.all([waitForPort(API_PORT, 'API'), waitForPort(WEB_PORT, 'web')]);
+  start('api', path.join(root, 'backend', 'dist', 'main.js'), path.join(root, 'backend'), api.port, { HOST: api.host });
+  start('web', path.join(root, 'frontend', '.next', 'standalone', 'server.js'), path.join(root, 'frontend', '.next', 'standalone'), web.port, { HOSTNAME: web.host });
+
+  await Promise.all([waitForPort(api.port, 'API'), waitForPort(web.port, 'web')]);
   console.log('[supervisor] both processes are up');
 
-  const server = http.createServer((req, res) => proxy(req, res, isApi(req.url || '') ? API_PORT : WEB_PORT));
+  const server = http.createServer((req, res) => proxy(req, res, isApi(req.url || '') ? api.port : web.port));
 
   // Socket.io needs the Upgrade handshake forwarded, not just plain requests.
   server.on('upgrade', (req, socket, head) => {
-    const port = isApi(req.url || '') ? API_PORT : WEB_PORT;
+    const port = isApi(req.url || '') ? api.port : web.port;
     const up = http.request({ host: '127.0.0.1', port, path: req.url, method: req.method, headers: req.headers });
     up.on('upgrade', (upRes, upSocket, upHead) => {
       socket.write(

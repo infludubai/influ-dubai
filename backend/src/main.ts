@@ -83,7 +83,10 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const port = process.env.PORT ?? 4001;
-  await app.listen(port, '0.0.0.0');
+  // The supervisor probes which interface the host permits and passes it in;
+  // on GoDaddy binding the loopback address is refused outright.
+  const host = process.env.HOST ?? '0.0.0.0';
+  await app.listen(port, host);
   logger.log(`InfluDubai API listening on port ${port} (prefix /api/v1)`);
   logger.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
 }
