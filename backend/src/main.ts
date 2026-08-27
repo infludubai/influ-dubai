@@ -7,7 +7,14 @@ import { AppModule } from './app.module';
 import { validateEnv } from './config/env.validation';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
 
-async function bootstrap() {
+/**
+ * Builds and configures the API without binding a port.
+ *
+ * Exported because GoDaddy's sandbox permits exactly one listening socket —
+ * the port it assigns — so the single-process entry point mounts this app on
+ * its own server alongside Next.js rather than running it separately.
+ */
+export async function createApp(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
   });
@@ -82,17 +89,26 @@ async function bootstrap() {
   // which is how Render stops an instance during a deploy.
   app.enableShutdownHooks();
 
-  const port = process.env.PORT ?? 4001;
-  // The supervisor probes which interface the host permits and passes it in;
-  // on GoDaddy binding the loopback address is refused outright.
-  const host = process.env.HOST ?? '0.0.0.0';
-  await app.listen(port, host);
-  logger.log(`InfluDubai API listening on port ${port} (prefix /api/v1)`);
   logger.log(`Allowed origins: ${allowedOrigins.join(', ')}`);
+  return app;
 }
 
-bootstrap().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error('Fatal: API failed to start', err);
-  process.exit(1);
-});
+async function bootstrap() {
+  const app = await createApp();
+  const port = process.env.PORT ?? 4001;
+  const host = process.env.HOST ?? '0.0.0.0';
+  await app.listen(port, host);
+  new Logger('Bootstrap').log(
+    `InfluDubai API listening on ${host}:${port} (prefix /api/v1)`,
+  );
+}
+
+// Only self-start when run as the entry point. Imported by the single-process
+// server, this module must not bind anything of its own.
+if (require.main === module) {
+  bootstrap().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('Fatal: API failed to start', err);
+    process.exit(1);
+  });
+}

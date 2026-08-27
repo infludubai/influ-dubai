@@ -1,126 +1,36 @@
 /**
- * Single-process entry point for hosts that run one Node app per repository
- * (GoDaddy's Node.js hosting, and most simple PaaS products).
+ * Single-process entry point.
  *
- * It starts the NestJS API and the Next.js server on internal ports, then
- * fronts both with one public listener on $PORT:
+ * GoDaddy's Node.js sandbox permits exactly one listening socket — the port it
+ * assigns. A probe from inside it refused every alternative, including an
+ * ephemeral one:
  *
- *   /api/v1/*, /socket.io/*  -> NestJS
- *   everything else          -> Next.js
+ *   bind 0.0.0.0:44301 -> REFUSED - EACCES
+ *   bind 127.0.0.1:0   -> REFUSED - EACCES
  *
- * Because both are served from one origin there is no cross-origin request
- * between the site and its API at all, which removes CORS from the picture
- * entirely rather than leaving it as something to misconfigure.
+ * So the API and the site cannot be separate servers behind a proxy. Both run
+ * in this process and share the one listener:
  *
- * No dependencies: the proxy is a thin pipe over node:http, including the
- * Upgrade handshake so realtime messaging keeps working.
+ *   /api/v1/*, /socket.io/*  ->  NestJS, mounted without binding a port
+ *   everything else          ->  Next.js, via its request handler
+ *
+ * They are same-origin by construction, so there is no cross-origin request
+ * between the site and its API at all — CORS stops being something that can be
+ * misconfigured.
  */
 const http = require('node:http');
 const { spawn } = require('node:child_process');
-const { reportConnectivity, reportBindability } = require('./diagnostics');
+const { reportConnectivity } = require('./diagnostics');
 const { resolveDatabaseUrl } = require('./database-url');
 const fs = require('node:fs');
 const path = require('node:path');
 
 const PUBLIC_PORT = Number(process.env.PORT || 8080);
-const API_PORT = Number(process.env.INTERNAL_API_PORT || 44301);
-const WEB_PORT = Number(process.env.INTERNAL_WEB_PORT || 44302);
 
-/**
- * Finds an address the sandbox will actually let the internal servers use.
- *
- * The two internal ports are an implementation detail — nothing outside the
- * container ever connects to them — but a host still has to permit the bind.
- * GoDaddy refused 127.0.0.1 outright ('listen EACCES'), so rather than betting
- * on one address and one port number, ask the kernel what is allowed: the
- * preferred interface first, then the other, then whatever ephemeral port it
- * hands out. Only if all of that fails is the situation genuinely hopeless.
- */
-function canBind(host, port) {
-  return new Promise((resolve) => {
-    const probe = http.createServer(() => {});
-    probe.once('error', () => resolve(null));
-    probe.once('listening', () => {
-      const assigned = probe.address().port;
-      probe.close(() => resolve(assigned));
-    });
-    probe.listen(port, host);
-  });
-}
-
-async function reserveInternal(preferredPort, label) {
-  for (const host of ['0.0.0.0', '127.0.0.1']) {
-    for (const port of [preferredPort, 0]) {
-      const assigned = await canBind(host, port);
-      if (assigned) {
-        if (host !== '0.0.0.0' || port !== preferredPort) {
-          console.log(`[supervisor] ${label}: using ${host}:${assigned}`);
-        }
-        return { host, port: assigned };
-      }
-    }
-  }
-  throw new Error(
-    `${label}: this host refuses every internal port bind, so the API and the ` +
-      'site cannot be fronted by one listener. See the [diagnostics] bind lines above.',
-  );
-}
-
+/** Everything else belongs to Next.js. */
 const API_PREFIXES = ['/api/v1', '/socket.io'];
-
-function start(name, file, cwd, port, extraEnv = {}) {
-  const child = spawn(process.execPath, [file], {
-    cwd,
-    env: { ...process.env, PORT: String(port), ...extraEnv },
-    stdio: ['ignore', 'inherit', 'inherit'],
-  });
-  child.on('exit', (code, signal) => {
-    // If either half dies the app is broken; exit so the host restarts it
-    // cleanly rather than serving a half-working site.
-    console.error(`[supervisor] ${name} exited (code=${code} signal=${signal}) — shutting down`);
-    process.exit(code ?? 1);
-  });
-  return child;
-}
-
-function waitForPort(port, label, timeoutMs = 90000) {
-  const started = Date.now();
-  return new Promise((resolve, reject) => {
-    const attempt = () => {
-      const req = http.request({ host: '127.0.0.1', port, path: '/', method: 'HEAD', timeout: 2000 }, () => {
-        req.destroy();
-        resolve();
-      });
-      // Any response at all — including an error status — proves it is listening.
-      req.on('error', () => {
-        if (Date.now() - started > timeoutMs) return reject(new Error(`${label} did not start within ${timeoutMs}ms`));
-        setTimeout(attempt, 500);
-      });
-      req.on('timeout', () => { req.destroy(); });
-      req.end();
-    };
-    attempt();
-  });
-}
-
-const isApi = (url) => API_PREFIXES.some((p) => url === p || url.startsWith(p + '/') || url.startsWith(p + '?'));
-
-function proxy(req, res, port) {
-  const upstream = http.request(
-    { host: '127.0.0.1', port, path: req.url, method: req.method, headers: req.headers },
-    (up) => {
-      res.writeHead(up.statusCode || 502, up.headers);
-      up.pipe(res);
-    },
-  );
-  upstream.on('error', (err) => {
-    console.error(`[proxy] ${req.method} ${req.url} -> :${port} failed: ${err.message}`);
-    if (!res.headersSent) res.writeHead(502, { 'Content-Type': 'text/plain' });
-    res.end('Bad gateway');
-  });
-  req.pipe(upstream);
-}
-
+const isApi = (url) =>
+  API_PREFIXES.some((p) => url === p || url.startsWith(p + '/') || url.startsWith(p + '?'));
 
 /**
  * Removes migrations left behind by a previous deploy.
@@ -143,7 +53,7 @@ function pruneStaleMigrations(migrationsDir) {
   try {
     expected = new Set(JSON.parse(fs.readFileSync(manifestPath, 'utf8')).migrations);
   } catch (err) {
-    console.warn(`[supervisor] migration manifest unreadable (${err.message}) — not pruning`);
+    console.warn(`[server] migration manifest unreadable (${err.message}) — not pruning`);
     return null;
   }
   if (expected.size === 0) return null;
@@ -157,7 +67,7 @@ function pruneStaleMigrations(migrationsDir) {
     fs.rmSync(path.join(migrationsDir, name), { recursive: true, force: true });
   }
   if (stale.length > 0) {
-    console.log(`[supervisor] removed ${stale.length} migration(s) from an earlier deploy: ${stale.join(', ')}`);
+    console.log(`[server] removed ${stale.length} migration(s) from an earlier deploy: ${stale.join(', ')}`);
   }
   return { expected, stale };
 }
@@ -202,8 +112,8 @@ function clearOrphanedFailedMigrations(root, expected) {
       // database, so a non-zero exit here is not worth failing the boot over.
       console.log(
         code === 0
-          ? '[supervisor] cleared any failed records for migrations this build does not ship'
-          : '[supervisor] no migration history to clean up yet',
+          ? '[server] cleared any failed records for migrations this build does not ship'
+          : '[server] no migration history to clean up yet',
       );
       resolve();
     });
@@ -221,14 +131,14 @@ function clearOrphanedFailedMigrations(root, expected) {
  */
 async function runMigrations(root) {
   if (!process.env.DATABASE_URL) {
-    // In development the API loads its own backend/.env, so the supervisor
+    // In development the API loads its own backend/.env, so this entry point
     // legitimately has no DATABASE_URL and migrations are run by hand.
     // In production its absence is fatal — silently skipping would leave a
     // fresh database with no schema and a very confusing failure.
     if (process.env.NODE_ENV === 'production') {
       throw new Error('DATABASE_URL is not set — cannot migrate or run the API');
     }
-    console.warn('[supervisor] DATABASE_URL not set — skipping migrations (development)');
+    console.warn('[server] DATABASE_URL not set — skipping migrations (development)');
     return;
   }
 
@@ -238,7 +148,7 @@ async function runMigrations(root) {
   }
 
   return new Promise((resolve, reject) => {
-    console.log('[supervisor] applying database migrations…');
+    console.log('[server] applying database migrations…');
     const child = spawn(
       process.platform === 'win32' ? 'npx.cmd' : 'npx',
       ['prisma', 'migrate', 'deploy'],
@@ -248,7 +158,7 @@ async function runMigrations(root) {
         stdio: ['ignore', 'inherit', 'inherit'],
         // Node refuses to spawn .cmd shims directly on Windows (EINVAL) since
         // the CVE-2024-27980 fix. Hosting is Linux, but this keeps the
-        // supervisor runnable locally for pre-deploy checks.
+        // entry point runnable locally for pre-deploy checks.
         shell: process.platform === 'win32',
       },
     );
@@ -261,52 +171,76 @@ async function runMigrations(root) {
   });
 }
 
+
+/**
+ * Mounts the NestJS API without letting it bind a port.
+ *
+ * Nest builds its own http.Server around the express instance at creation
+ * time, and the websocket gateway attaches to that object during init(). The
+ * server never listens, so nothing reaches it on its own — feeding it the
+ * 'request' and 'upgrade' events from the public listener drives both the REST
+ * routes and Socket.io through exactly the pipeline they expect.
+ */
+async function mountApi(root) {
+  const { createApp } = require(path.join(root, 'backend', 'dist', 'main.js'));
+  const app = await createApp();
+  await app.init();
+  return app.getHttpServer();
+}
+
+/**
+ * Prepares Next.js in-process and returns its request handler.
+ *
+ * The standalone build ships its own server.js, but that binds a port. This
+ * reproduces what it does — the inlined config, production mode — through the
+ * custom-server API instead, so the app can be handed requests directly.
+ */
+async function mountWeb(root) {
+  const dir = path.join(root, 'frontend', '.next', 'standalone');
+  // The build records the resolved config; standalone's server.js inlines this
+  // same object. Passing it explicitly means next.config.ts is not needed here.
+  const { config } = require(path.join(dir, '.next', 'required-server-files.json'));
+  process.env.__NEXT_PRIVATE_STANDALONE_CONFIG = JSON.stringify(config);
+  process.env.NODE_ENV = 'production';
+
+  const next = require(require.resolve('next', { paths: [dir] }));
+  const app = next({ dev: false, dir, conf: config });
+  await app.prepare();
+  return app.getRequestHandler();
+}
+
 async function main() {
   const root = __dirname;
   // Build the connection string from the host's DB_* variables before anything
-  // reads it — the probe, the migration and both child processes all depend on
+  // reads it — the probe, the migration and the API all depend on
   // process.env.DATABASE_URL being final by this point.
-  console.log('[supervisor] ' + resolveDatabaseUrl());
+  console.log('[server] ' + resolveDatabaseUrl());
   // Report egress before migrating: P1001 alone cannot tell a blocked port
   // from a bad host, and that distinction decides the fix.
   await reportConnectivity(process.env.DATABASE_URL);
   await runMigrations(root);
 
-  await reportBindability([API_PORT, WEB_PORT]);
-  const api = await reserveInternal(API_PORT, 'API');
-  const web = await reserveInternal(WEB_PORT, 'web');
-  console.log(`[supervisor] starting API on ${api.host}:${api.port} and web on ${web.host}:${web.port}`);
+  const [api, web] = await Promise.all([mountApi(root), mountWeb(root)]);
+  console.log('[server] API and site are mounted');
 
-  start('api', path.join(root, 'backend', 'dist', 'main.js'), path.join(root, 'backend'), api.port, { HOST: api.host });
-  start('web', path.join(root, 'frontend', '.next', 'standalone', 'server.js'), path.join(root, 'frontend', '.next', 'standalone'), web.port, { HOSTNAME: web.host });
-
-  await Promise.all([waitForPort(api.port, 'API'), waitForPort(web.port, 'web')]);
-  console.log('[supervisor] both processes are up');
-
-  const server = http.createServer((req, res) => proxy(req, res, isApi(req.url || '') ? api.port : web.port));
-
-  // Socket.io needs the Upgrade handshake forwarded, not just plain requests.
-  server.on('upgrade', (req, socket, head) => {
-    const port = isApi(req.url || '') ? api.port : web.port;
-    const up = http.request({ host: '127.0.0.1', port, path: req.url, method: req.method, headers: req.headers });
-    up.on('upgrade', (upRes, upSocket, upHead) => {
-      socket.write(
-        `HTTP/1.1 101 Switching Protocols\r\n` +
-          Object.entries(upRes.headers).map(([k, v]) => `${k}: ${v}`).join('\r\n') +
-          '\r\n\r\n',
-      );
-      if (upHead && upHead.length) upSocket.unshift(upHead);
-      upSocket.pipe(socket).pipe(upSocket);
-    });
-    up.on('error', () => socket.destroy());
-    if (head && head.length) up.write(head);
-    up.end();
+  const server = http.createServer((req, res) => {
+    if (isApi(req.url || '')) api.emit('request', req, res);
+    else web(req, res);
   });
 
-  server.listen(PUBLIC_PORT, () => console.log(`[supervisor] listening on :${PUBLIC_PORT}`));
+  // Socket.io's handshake starts as an HTTP request and then upgrades; only
+  // the API half has anything listening for that.
+  server.on('upgrade', (req, socket, head) => {
+    if (isApi(req.url || '')) api.emit('upgrade', req, socket, head);
+    else socket.destroy();
+  });
+
+  server.listen(PUBLIC_PORT, () =>
+    console.log(`[server] listening on :${PUBLIC_PORT}`),
+  );
 }
 
 main().catch((err) => {
-  console.error('[supervisor] fatal:', err);
+  console.error('[server] fatal:', err);
   process.exit(1);
 });
