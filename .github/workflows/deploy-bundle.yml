@@ -17,6 +17,11 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# The default workflow token is read-only; publishing the bundle branch
+# needs write access to contents.
+permissions:
+  contents: write
+
 jobs:
   bundle:
     runs-on: ubuntu-latest
