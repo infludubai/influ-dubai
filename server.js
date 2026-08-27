@@ -215,8 +215,56 @@ async function mountWeb(root) {
   return app.getRequestHandler();
 }
 
+/**
+ * A holding page for requests that arrive before the app has finished booting.
+ *
+ * Returns 200, not 503, deliberately: the host polls the port to decide
+ * whether the app is alive, and a 503 during a cold start reads as a failure
+ * and gets the process killed — which is the very thing this avoids.
+ */
+function serveStarting(res) {
+  const body =
+    '<!doctype html><meta charset="utf-8"><title>Starting…</title>' +
+    '<meta http-equiv="refresh" content="3">' +
+    '<style>body{font:16px system-ui;display:grid;place-items:center;height:100vh;margin:0;color:#444}</style>' +
+    '<p>Starting up — this page refreshes itself.</p>';
+  res.writeHead(200, {
+    'Content-Type': 'text/html; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'Retry-After': '3',
+  });
+  res.end(body);
+}
+
 async function main() {
   const root = __dirname;
+
+  // Bind before doing any work.
+  //
+  // Booting Nest and Next takes tens of seconds on a small container, and the
+  // host gives a starting app a deadline to answer on its port. Waiting until
+  // both halves were ready meant being killed part-way through mapping routes,
+  // over and over. Listening first turns a cold start into a few seconds of
+  // holding page instead of a restart loop.
+  let api = null;
+  let web = null;
+
+  const server = http.createServer((req, res) => {
+    if (!api || !web) return serveStarting(res);
+    if (isApi(req.url || '')) api.emit('request', req, res);
+    else web(req, res);
+  });
+
+  // Socket.io's handshake starts as an HTTP request and then upgrades; only
+  // the API half has anything listening for that.
+  server.on('upgrade', (req, socket, head) => {
+    if (api && isApi(req.url || '')) api.emit('upgrade', req, socket, head);
+    else socket.destroy();
+  });
+
+  await new Promise((resolve) => server.listen(PUBLIC_PORT, resolve));
+  console.log(`[server] listening on :${PUBLIC_PORT} — booting`);
+
   // Build the connection string from the host's DB_* variables before anything
   // reads it — the probe, the migration and the API all depend on
   // process.env.DATABASE_URL being final by this point.
@@ -226,24 +274,14 @@ async function main() {
   await reportConnectivity(process.env.DATABASE_URL);
   await runMigrations(root);
 
-  const [api, web] = await Promise.all([mountApi(root), mountWeb(root)]);
-  console.log('[server] API and site are mounted');
-
-  const server = http.createServer((req, res) => {
-    if (isApi(req.url || '')) api.emit('request', req, res);
-    else web(req, res);
-  });
-
-  // Socket.io's handshake starts as an HTTP request and then upgrades; only
-  // the API half has anything listening for that.
-  server.on('upgrade', (req, socket, head) => {
-    if (isApi(req.url || '')) api.emit('upgrade', req, socket, head);
-    else socket.destroy();
-  });
-
-  server.listen(PUBLIC_PORT, () =>
-    console.log(`[server] listening on :${PUBLIC_PORT}`),
-  );
+  const startedAt = Date.now();
+  // Sequential, not parallel: on a small container both halves competing for
+  // CPU and memory is what makes a cold start slow enough to be a problem.
+  // The API first, so /api/v1 works as early as possible.
+  api = await mountApi(root);
+  console.log(`[server] API mounted (${Date.now() - startedAt}ms)`);
+  web = await mountWeb(root);
+  console.log(`[server] site mounted (${Date.now() - startedAt}ms total) — ready`);
 }
 
 main().catch((err) => {
