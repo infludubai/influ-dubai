@@ -6,7 +6,7 @@
  * egress rules are undocumented that difference decides the whole approach,
  * so this probes the ports directly and reports which are open.
  *
- * Never logs credentials: only the hostname and port numbers.
+ * Never logs credentials: only hostnames and port numbers.
  */
 const net = require('node:net');
 
@@ -26,34 +26,44 @@ function probePort(host, port, timeoutMs = 8000) {
   });
 }
 
+/**
+ * Reports reachability of every database this host might use.
+ *
+ * The GoDaddy-provisioned MySQL is checked because its credentials are
+ * injected into the runtime automatically (DB_HOST and friends); whether the
+ * sandbox can actually reach it decides if migrating off Postgres is even
+ * worth attempting.
+ */
 async function reportConnectivity(databaseUrl) {
-  if (!databaseUrl) {
-    console.warn('[diagnostics] DATABASE_URL is not set');
-    return;
+  const checks = [];
+
+  if (databaseUrl) {
+    try {
+      const u = new URL(databaseUrl);
+      const port = Number(u.port || 5432);
+      checks.push({ label: 'external database (DATABASE_URL)', host: u.hostname, port });
+      // 443 as a control: if it answers while the database port does not,
+      // the host is filtering by port rather than blocking all egress.
+      checks.push({ label: 'control (https)', host: u.hostname, port: 443 });
+    } catch {
+      console.warn('[diagnostics] DATABASE_URL could not be parsed');
+    }
   }
 
-  let host;
-  let port;
-  try {
-    const u = new URL(databaseUrl);
-    host = u.hostname;
-    port = Number(u.port || 5432);
-  } catch {
-    console.warn('[diagnostics] DATABASE_URL could not be parsed');
-    return;
+  if (process.env.DB_HOST) {
+    checks.push({
+      label: 'GoDaddy MySQL (DB_HOST)',
+      host: process.env.DB_HOST,
+      port: Number(process.env.DB_PORT || 3306),
+    });
+  } else {
+    console.log('[diagnostics] DB_HOST is not set — no GoDaddy MySQL provisioned for this app');
   }
 
-  // 443 acts as the control: if it is reachable and the database ports are
-  // not, the host is filtering by port rather than having no egress at all.
-  const [configured, transactionPooler, https] = await Promise.all([
-    probePort(host, port),
-    probePort(host, 6543),
-    probePort(host, 443),
-  ]);
-
-  console.log(`[diagnostics] ${host}:${port} (configured) -> ${configured}`);
-  console.log(`[diagnostics] ${host}:6543 (tx pooler)     -> ${transactionPooler}`);
-  console.log(`[diagnostics] ${host}:443  (control)       -> ${https}`);
+  for (const { label, host, port } of checks) {
+    const verdict = await probePort(host, port);
+    console.log(`[diagnostics] ${label} ${host}:${port} -> ${verdict}`);
+  }
 }
 
 module.exports = { probePort, reportConnectivity };
