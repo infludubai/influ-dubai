@@ -60,11 +60,13 @@ export function validateEnv(): void {
     );
   }
 
+  // Not fatal: the production domains are compiled into the CORS allow-list
+  // in main.ts, so the app is correct without this. It exists only to add
+  // extra origins (a staging host, a preview deploy).
   if (isProd && !process.env.ALLOWED_ORIGINS?.trim()) {
-    logger.error(
-      'ALLOWED_ORIGINS must be set in production — it controls which frontend origins may call this API.',
+    logger.log(
+      'ALLOWED_ORIGINS not set — using the built-in production origins only.',
     );
-    process.exit(1);
   }
 
   const disabled = OPTIONAL.filter(({ key }) => !process.env[key]?.trim());

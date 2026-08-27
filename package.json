@@ -1,0 +1,18 @@
+{
+  "name": "infludubai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "InfluDubai AI — creator marketplace for the UAE and MENA",
+  "main": "server.js",
+  "scripts": {
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "npm --prefix backend ci --include=dev && npm --prefix backend run prisma:generate && npm --prefix backend run build",
+    "build:frontend": "npm --prefix frontend ci --include=dev && npm --prefix frontend run build",
+    "migrate": "npm --prefix backend exec -- prisma migrate deploy",
+    "start": "node server.js",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

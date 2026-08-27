@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SERVER_API_URL } from "@/lib/server-api";
 import { notFound } from "next/navigation";
 import {
   Building2, Globe, MapPin, Megaphone, DollarSign, Tag, ArrowRight, Star,
@@ -9,12 +10,11 @@ import type { BrandProfile, Review } from "@/lib/api";
 // Brand profiles change independently of deploys, so render on demand.
 export const dynamic = "force-dynamic";
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001/api/v1";
+
 
 async function getBrand(id: string): Promise<BrandProfile | null> {
   try {
-    const res = await fetch(`${API_URL}/brands/${id}`, { cache: "no-store" });
+    const res = await fetch(`${SERVER_API_URL}/brands/${id}`, { cache: "no-store" });
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -24,7 +24,7 @@ async function getBrand(id: string): Promise<BrandProfile | null> {
 
 async function getReviews(id: string): Promise<Review[]> {
   try {
-    const res = await fetch(`${API_URL}/brands/${id}/reviews`, {
+    const res = await fetch(`${SERVER_API_URL}/brands/${id}/reviews`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

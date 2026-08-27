@@ -1,4 +1,5 @@
 import "server-only";
+import { SERVER_API_URL } from "./server-api";
 
 /**
  * Server-side access to admin-editable website copy.
@@ -8,8 +9,7 @@ import "server-only";
  * content request failed.
  */
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001/api/v1";
+
 
 export type SiteContent = Record<string, string>;
 
@@ -30,7 +30,7 @@ const FALLBACK: SiteContent = {
 
 export async function getSiteContent(): Promise<SiteContent> {
   try {
-    const res = await fetch(`${API_URL}/content`, { cache: "no-store" });
+    const res = await fetch(`${SERVER_API_URL}/content`, { cache: "no-store" });
     if (!res.ok) return FALLBACK;
     const data = (await res.json()) as SiteContent;
     return { ...FALLBACK, ...data };

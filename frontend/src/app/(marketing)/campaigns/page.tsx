@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SERVER_API_URL } from "@/lib/server-api";
 import { Megaphone, MapPin, Tag, DollarSign, ArrowRight, Building2 } from "lucide-react";
 import { PageHero } from "@/components/marketing/Prose";
 import { pageMetadata } from "@/lib/seo";
@@ -15,8 +16,7 @@ export const metadata = pageMetadata({
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4001/api/v1";
+
 
 type PublicCampaign = {
   id: string;
@@ -39,7 +39,7 @@ const TYPE_LABEL: Record<string, string> = {
 
 async function getCampaigns(): Promise<PublicCampaign[]> {
   try {
-    const res = await fetch(`${API_URL}/campaigns?limit=24`, {
+    const res = await fetch(`${SERVER_API_URL}/campaigns?limit=24`, {
       cache: "no-store",
     });
     if (!res.ok) return [];

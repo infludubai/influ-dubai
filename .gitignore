@@ -35,3 +35,9 @@ pgdata/
 .vercel
 .env*
 .admin-password.txt
+
+# local supervisor test artefacts
+supervisor-test.log
+supervisor-err.log
+probe.log
+probe-err.log
