@@ -78,8 +78,45 @@ function proxy(req, res, port) {
   req.pipe(upstream);
 }
 
+/**
+ * Applies pending Prisma migrations before the API starts.
+ *
+ * Hosts that only run 'npm install' then 'npm start' give no place to hook a
+ * release command, so a fresh database would otherwise have no schema at all.
+ * Runs at startup rather than build time because DATABASE_URL is a runtime
+ * secret and may not exist while building.
+ */
+function runMigrations(root) {
+  return new Promise((resolve, reject) => {
+    if (!process.env.DATABASE_URL) {
+      // In development the API loads its own backend/.env, so the supervisor
+      // legitimately has no DATABASE_URL and migrations are run by hand.
+      // In production its absence is fatal — silently skipping would leave a
+      // fresh database with no schema and a very confusing failure.
+      if (process.env.NODE_ENV === 'production') {
+        return reject(new Error('DATABASE_URL is not set — cannot migrate or run the API'));
+      }
+      console.warn('[supervisor] DATABASE_URL not set — skipping migrations (development)');
+      return resolve();
+    }
+    console.log('[supervisor] applying database migrations…');
+    const child = spawn(
+      process.platform === 'win32' ? 'npx.cmd' : 'npx',
+      ['prisma', 'migrate', 'deploy'],
+      { cwd: path.join(root, 'backend'), env: process.env, stdio: ['ignore', 'inherit', 'inherit'] },
+    );
+    child.on('error', reject);
+    child.on('exit', (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`prisma migrate deploy failed with exit code ${code}`)),
+    );
+  });
+}
+
 async function main() {
   const root = __dirname;
+  await runMigrations(root);
   console.log(`[supervisor] starting API on :${API_PORT} and web on :${WEB_PORT}`);
 
   start('api', path.join(root, 'backend', 'dist', 'main.js'), path.join(root, 'backend'), API_PORT);
