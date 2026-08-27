@@ -17,6 +17,7 @@
  */
 const http = require('node:http');
 const { spawn } = require('node:child_process');
+const { reportConnectivity } = require('./diagnostics');
 const path = require('node:path');
 
 const PUBLIC_PORT = Number(process.env.PORT || 8080);
@@ -116,6 +117,9 @@ function runMigrations(root) {
 
 async function main() {
   const root = __dirname;
+  // Report egress before migrating: P1001 alone cannot tell a blocked port
+  // from a bad host, and that distinction decides the fix.
+  await reportConnectivity(process.env.DATABASE_URL);
   await runMigrations(root);
   console.log(`[supervisor] starting API on :${API_PORT} and web on :${WEB_PORT}`);
 
