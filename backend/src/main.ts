@@ -53,6 +53,9 @@ async function bootstrap() {
           .filter(Boolean),
         'https://www.infludubai.com',
         'https://infludubai.com',
+        // .ae is the primary UAE domain, registered with Tasjeel.
+        'https://www.infludubai.ae',
+        'https://infludubai.ae',
         // The Vercel project's technical alias — kept so the site still works
         // if the custom domain's DNS ever breaks.
         'https://frontend-alpha-sage-23.vercel.app',
