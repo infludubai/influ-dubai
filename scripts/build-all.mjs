@@ -1,13 +1,17 @@
 /**
  * Builds both workspaces for a single-app host.
  *
- * Uses an explicit script rather than npm --prefix chains because:
- *  - `npm --prefix X ci` resolves the lockfile from the *current* directory on
- *    some npm versions, producing a partial install; running with cwd set to
- *    the workspace is unambiguous.
- *  - Hosts set their own NODE_ENV (GoDaddy uses a non-standard value, which
- *    Next.js warns about and which breaks its build). Each build gets a
- *    normalised NODE_ENV=production regardless of what the host injected.
+ * Two things this gets right that a plain npm script chain does not:
+ *
+ *  - cwd per workspace. `npm --prefix X ci` resolves the lockfile from the
+ *    current directory on some npm versions, producing a partial install.
+ *
+ *  - NODE_ENV per step. npm treats NODE_ENV=production as --omit=dev, so
+ *    installing under it silently drops the compilers (TypeScript, the Nest
+ *    CLI) that the build then needs. Installs therefore run with NODE_ENV
+ *    unset, and only the builds run as production. Hosts that inject their
+ *    own NODE_ENV — GoDaddy sets a non-standard value Next.js rejects — are
+ *    overridden either way.
  */
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -16,14 +20,18 @@ import { dirname, join } from 'node:path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 
-function run(args, cwd, label) {
+function run(args, cwd, label, nodeEnv) {
   return new Promise((resolve, reject) => {
-    console.log(`\n[build] ${label}: npm ${args.join(' ')}  (in ${cwd})`);
+    console.log(`\n[build] ${label} (NODE_ENV=${nodeEnv ?? 'unset'}): npm ${args.join(' ')}`);
+    const env = { ...process.env };
+    // Deprecated and actively harmful here: it forces --omit=dev.
+    delete env.NPM_CONFIG_PRODUCTION;
+    if (nodeEnv === undefined) delete env.NODE_ENV;
+    else env.NODE_ENV = nodeEnv;
+
     const child = spawn(npm, args, {
       cwd,
-      // Normalise NODE_ENV so npm installs devDependencies (needed for the
-      // compilers) and Next.js sees a value it understands.
-      env: { ...process.env, NODE_ENV: 'production', NPM_CONFIG_PRODUCTION: 'false' },
+      env,
       stdio: ['ignore', 'inherit', 'inherit'],
       shell: process.platform === 'win32',
     });
@@ -37,11 +45,13 @@ function run(args, cwd, label) {
 const backend = join(root, 'backend');
 const frontend = join(root, 'frontend');
 
-await run(['ci', '--include=dev'], backend, 'backend install');
-await run(['run', 'prisma:generate'], backend, 'prisma generate');
-await run(['run', 'build'], backend, 'backend build');
+// Installs: NODE_ENV unset so devDependencies are included.
+await run(['ci', '--include=dev'], backend, 'backend install', undefined);
+await run(['ci', '--include=dev'], frontend, 'frontend install', undefined);
 
-await run(['ci', '--include=dev'], frontend, 'frontend install');
-await run(['run', 'build'], frontend, 'frontend build');
+// Builds: production, which is what the compilers expect.
+await run(['run', 'prisma:generate'], backend, 'prisma generate', 'production');
+await run(['run', 'build'], backend, 'backend build', 'production');
+await run(['run', 'build'], frontend, 'frontend build', 'production');
 
 console.log('\n[build] both workspaces built');
