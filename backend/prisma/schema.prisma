@@ -3,6 +3,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // "native" covers wherever the build runs; the musl target is the engine
+  // for the Alpine container the app is hosted in. Without it Prisma throws
+  // PrismaClientInitializationError at boot and the app restarts forever.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
