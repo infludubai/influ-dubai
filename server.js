@@ -220,6 +220,14 @@ async function mountApi(root) {
  * listener, so the app can be handed requests directly.
  */
 async function mountWeb(root) {
+  // The host's pull preserves files, so an old site build lingers on disk
+  // long after the bundle stopped shipping one. The bundle drops this marker
+  // to say the site lives on Vercel now — mounting the stale copy would cost
+  // heap for pages nobody should see.
+  if (fs.existsSync(path.join(root, 'SITE_ON_VERCEL'))) {
+    console.log('[server] site is served by Vercel — API only');
+    return null;
+  }
   const dir = path.join(root, 'frontend', '.next', 'standalone');
   if (!fs.existsSync(path.join(dir, '.next'))) {
     console.log('[server] no site build here — serving the API only');
