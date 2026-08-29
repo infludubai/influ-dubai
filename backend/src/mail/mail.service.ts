@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { SettingsService } from '../settings/settings.service';
 
@@ -31,6 +30,10 @@ export class MailService {
     const fingerprint = `${host}:${port}:${user ?? ''}:${pass ?? ''}`;
 
     if (!this.transporter || this.transporterKey !== fingerprint) {
+      // Required here rather than imported: the SMTP client is dead weight
+      // at boot on a container this small, and most deploys never send mail.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const nodemailer = require('nodemailer');
       this.transporter = nodemailer.createTransport({
         host,
         port,

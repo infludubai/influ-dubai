@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import OpenAI from 'openai';
+import type OpenAI from 'openai';
 import { PrismaService } from '../prisma/prisma.service';
 import { toStringList } from '../common/json-array';
 import { SettingsService } from '../settings/settings.service';
@@ -36,6 +36,11 @@ export class FraudService {
       return null;
     }
     if (!this.client || this.clientKey !== key) {
+      // Required here, not imported at the top: loading the OpenAI SDK
+      // costs memory at boot even when unused, and this process has little
+      // to spare. The type import is erased at compile time.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const OpenAI = require('openai');
       this.client = new OpenAI({ apiKey: key });
       this.clientKey = key;
     }

@@ -1,5 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { PaymentsService } from '../payments/payments.service';
@@ -103,6 +103,12 @@ export class BillingService {
       return null;
     }
     if (!this.client || this.clientKey !== key) {
+  // Required here rather than imported at the top of the file: loading the
+  // Stripe SDK costs memory at boot even when no key is configured, and
+  // this process has very little to spare. The type import above is erased
+  // at compile time, so it costs nothing.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Stripe = require('stripe');
       this.client = new Stripe(key);
       this.clientKey = key;
     }

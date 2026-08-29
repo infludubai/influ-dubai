@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import OpenAI from 'openai';
-import Stripe from 'stripe';
+import type OpenAI from 'openai';
+import type Stripe from 'stripe';
 import { SettingsService } from './settings.service';
 import { SettingGroupId } from './settings.catalog';
 
@@ -43,6 +43,10 @@ export class SettingsTester {
     const apiKey = this.settings.get('OPENAI_API_KEY');
     if (!apiKey) return { ok: false, message: 'No API key configured.' };
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
+    const OpenAI = require('openai');
+
     const client = new OpenAI({ apiKey });
     const models = await client.models.list();
     const wanted = this.settings.get('OPENAI_MODEL') ?? 'gpt-4o-mini';
@@ -61,6 +65,8 @@ export class SettingsTester {
     if (!apiKey) return { ok: false, message: 'No secret key configured.' };
 
     // balance.retrieve is the cheapest call that still proves the key is valid.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Stripe = require('stripe');
     const stripe = new Stripe(apiKey);
     const balance = await stripe.balance.retrieve();
     const mode = apiKey.startsWith('sk_live') ? 'LIVE' : 'test';
