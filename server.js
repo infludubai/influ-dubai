@@ -353,8 +353,24 @@ async function main() {
     }
     if (web) return web(req, res);
     if (!booted) return serveStarting(res);
-    // API-only deployment: the site lives elsewhere, so anything that is not
-    // an API route is genuinely not here.
+
+    // The host polls the root path to decide whether the app is alive, so it
+    // has to answer 200 even though the site itself lives on Vercel. Returning
+    // 404 here got the app marked unhealthy and its traffic replaced with a
+    // gateway error, while the API underneath was running perfectly well.
+    if (url === '/' || url === '') {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      return res.end(
+        JSON.stringify({
+          service: 'InfluDubai API',
+          status: 'ok',
+          site: 'https://www.infludubai.ae',
+          api: '/api/v1',
+        }),
+      );
+    }
+
+    // Anything else that is not an API route genuinely is not here.
     res.writeHead(404, { 'Content-Type': 'application/json' });
     return res.end('{"message":"This host serves the API. The site is at https://www.infludubai.ae"}');
   });

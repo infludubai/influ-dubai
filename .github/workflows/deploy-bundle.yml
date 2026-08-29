@@ -64,12 +64,13 @@ jobs:
             fs.writeFileSync('bundle/package.json', JSON.stringify({
               name: 'infludubai', version: '1.0.0', private: true,
               main: 'server.js',
-              // V8 sizes its heap from the machine rather than the container,
-              // so an unbounded heap on a small plan grows until the container
-              // kills the process. 192MB suits a 256MB-or-larger container and
-              // leaves room for the Prisma engine and Next's server bundle,
-              // which together are most of the footprint and are not heap.
-              scripts: { start: 'node --max-old-space-size=192 server.js' },
+              // V8 sizes its heap from the machine, not the container, so a
+              // generous cap simply lets the peak grow until the container
+              // kills the process — which is what 192MB did here. The API
+              // settles at 83MB, so 112MB of old space is ample steady state
+              // while forcing collection during the one spike that matters:
+              // Nest instantiating its modules at boot.
+              scripts: { start: 'node --max-old-space-size=112 server.js' },
               engines: { node: '>=20' }
             }, null, 2) + '\n');
           "
