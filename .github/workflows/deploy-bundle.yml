@@ -39,18 +39,6 @@ jobs:
           npx prisma generate
           npm run build
 
-      - name: Build frontend
-        working-directory: frontend
-        env:
-          # Baked in at build time. Relative API base keeps the site and its
-          # API same-origin behind the supervisor, so there is no CORS at all.
-          NEXT_PUBLIC_API_URL: /api/v1
-          NEXT_PUBLIC_SITE_URL: https://www.infludubai.ae
-          NODE_ENV: production
-        run: |
-          npm ci --include=dev
-          npm run build
-
       - name: Prune backend to runtime dependencies
         working-directory: backend
         run: |
@@ -59,6 +47,10 @@ jobs:
           npm prune --omit=dev
           npm install --no-save --omit=dev prisma@$(node -p "require('./package.json').devDependencies.prisma.replace(/^[^0-9]*/,'')")
 
+      # The bundle is the API only. The site is served by Vercel, which runs
+      # Next.js natively — and splitting them is what makes the API fit in the
+      # hosting container at all: Next's server was 31MB of a budget that has
+      # none to spare.
       - name: Assemble bundle
         run: |
           rm -rf bundle && mkdir -p bundle
@@ -106,9 +98,6 @@ jobs:
           # falls back to prisma/schema.prisma and reads DATABASE_URL straight
           # from the environment, so the runtime bundle needs no TypeScript
           # loader and no dotenv.
-
-          mkdir -p bundle/frontend/.next
-          cp -r frontend/.next/standalone bundle/frontend/.next/standalone
 
           echo "Bundle size: $(du -sh bundle | cut -f1)"
 

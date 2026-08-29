@@ -197,12 +197,20 @@ async function mountApi(root) {
 /**
  * Prepares Next.js in-process and returns its request handler.
  *
- * The standalone build ships its own server.js, but that binds a port. This
- * reproduces what it does — the inlined config, production mode — through the
- * custom-server API instead, so the app can be handed requests directly.
+ * Returns null when no site build is present, which is the normal case for the
+ * hosted API: Vercel serves the site, and leaving Next out of this process is
+ * what brings it inside the container's memory limit.
+ *
+ * When a build is there — a local all-in-one run — this reproduces what the
+ * standalone server does, through the custom-server API rather than its own
+ * listener, so the app can be handed requests directly.
  */
 async function mountWeb(root) {
   const dir = path.join(root, 'frontend', '.next', 'standalone');
+  if (!fs.existsSync(path.join(dir, '.next'))) {
+    console.log('[server] no site build here — serving the API only');
+    return null;
+  }
   // The build records the resolved config; standalone's server.js inlines this
   // same object. Passing it explicitly means next.config.ts is not needed here.
   const { config } = require(path.join(dir, '.next', 'required-server-files.json'));
@@ -303,6 +311,7 @@ async function main() {
   // holding page instead of a restart loop.
   let api = null;
   let web = null;
+  let booted = false;
 
   const server = http.createServer((req, res) => {
     const url = req.url || '';
@@ -331,8 +340,12 @@ async function main() {
       }
       return api.emit('request', req, res);
     }
-    if (!web) return serveStarting(res);
-    return web(req, res);
+    if (web) return web(req, res);
+    if (!booted) return serveStarting(res);
+    // API-only deployment: the site lives elsewhere, so anything that is not
+    // an API route is genuinely not here.
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    return res.end('{"message":"This host serves the API. The site is at https://www.infludubai.ae"}');
   });
 
   // Socket.io's handshake starts as an HTTP request and then upgrades; only
@@ -362,7 +375,10 @@ async function main() {
   api = await withDeadline('API', 120000, mountApi(root));
   console.log(`[server] API mounted (${Date.now() - startedAt}ms, ${rss()})`);
   web = await withDeadline('site', 120000, mountWeb(root));
-  console.log(`[server] site mounted (${Date.now() - startedAt}ms total, ${rss()}) — ready`);
+  booted = true;
+  console.log(
+    `[server] ready (${Date.now() - startedAt}ms total, ${rss()}, site ${web ? 'mounted' : 'served elsewhere'})`,
+  );
 }
 
 main().catch((err) => {
