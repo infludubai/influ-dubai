@@ -65,7 +65,7 @@ export default function MessagesPage() {
   }, [messages]);
 
   function initSocket() {
-    socket = io(`${process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:4001"}/messaging`, {
+    socket = io(`${process.env.NEXT_PUBLIC_WS_URL ?? (typeof window !== "undefined" ? window.location.origin : "http://localhost:4001")}/messaging`, {
       auth: { token: accessToken },
     });
     socket.on("new_message", (msg: Message) => {
