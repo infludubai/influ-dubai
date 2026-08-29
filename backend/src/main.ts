@@ -17,6 +17,14 @@ import { AllExceptionsFilter } from './common/all-exceptions.filter';
 export async function createApp(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     rawBody: true,
+    // Nest logs a line per mapped route — around two hundred of them — which
+    // is more than the host's log viewer keeps. The end of a failed boot was
+    // always scrolled away by its own startup chatter. Warnings and errors
+    // still come through; the interesting lines are the ones this app prints.
+    logger:
+      process.env.NODE_ENV === 'production'
+        ? ['error', 'warn']
+        : ['log', 'error', 'warn', 'debug', 'verbose'],
   });
   const logger = new Logger('Bootstrap');
 

@@ -200,8 +200,11 @@ async function runMigrations(root) {
  */
 async function mountApi(root) {
   const { createApp } = require(path.join(root, 'backend', 'dist', 'main.js'));
+  console.log(`[server] api: module loaded (${rss()})`);
   const app = await createApp();
+  console.log(`[server] api: created (${rss()})`);
   await app.init();
+  console.log(`[server] api: initialised (${rss()})`);
   return app.getHttpServer();
 }
 
