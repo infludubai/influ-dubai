@@ -72,10 +72,12 @@ jobs:
             fs.writeFileSync('bundle/package.json', JSON.stringify({
               name: 'infludubai', version: '1.0.0', private: true,
               main: 'server.js',
-              // V8 sizes its heap from the host machine, not the container
-              // limit, so on a small plan it happily grows until the
-              // container is killed. Capping it makes V8 collect instead.
-              scripts: { start: 'node --max-old-space-size=320 server.js' },
+              // V8 sizes its heap from the machine rather than the container,
+              // so an unbounded heap on a small plan grows until the container
+              // kills the process. 192MB suits a 256MB-or-larger container and
+              // leaves room for the Prisma engine and Next's server bundle,
+              // which together are most of the footprint and are not heap.
+              scripts: { start: 'node --max-old-space-size=192 server.js' },
               engines: { node: '>=20' }
             }, null, 2) + '\n');
           "
