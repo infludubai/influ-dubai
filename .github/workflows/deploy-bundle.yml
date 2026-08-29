@@ -54,7 +54,7 @@ jobs:
       - name: Assemble bundle
         run: |
           rm -rf bundle && mkdir -p bundle
-          cp server.js diagnostics.js database-url.js bundle/
+          cp server.js database-url.js bundle/
           cp -r scripts bundle/scripts
 
           # Root manifest with no dependencies: `npm install` on the host has

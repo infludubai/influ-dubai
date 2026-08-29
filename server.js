@@ -20,7 +20,6 @@
  */
 const http = require('node:http');
 const { spawn } = require('node:child_process');
-const { reportConnectivity } = require('./diagnostics');
 const { resolveDatabaseUrl } = require('./database-url');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -128,14 +127,26 @@ function clearOrphanedFailedMigrations(root, expected) {
 }
 
 /**
- * Applies pending Prisma migrations before the API starts.
+ * Applies pending Prisma migrations, when asked to.
  *
- * Hosts that only run 'npm install' then 'npm start' give no place to hook a
- * release command, so a fresh database would otherwise have no schema at all.
- * Runs at startup rather than build time because DATABASE_URL is a runtime
- * secret and may not exist while building.
+ * This runs 'prisma migrate deploy', which is a separate Node process and
+ * needs a few hundred megabytes of its own — more than this container has to
+ * spare beside a running API. Left on by default it killed every boot: the
+ * server itself sat at 54MB while the migration child pushed the container
+ * over its limit, and the whole group was killed about ten seconds in.
+ *
+ * So it is opt-in. Set RUN_MIGRATIONS=1 for the one deploy that ships a new
+ * migration, then remove it. The schema can also be applied from the hosting
+ * panel's SQL import, which costs the running app nothing.
  */
 async function runMigrations(root) {
+  const wanted = /^(1|true|yes)$/i.test(process.env.RUN_MIGRATIONS ?? '');
+  if (!wanted) {
+    console.log(
+      '[server] skipping migrations (set RUN_MIGRATIONS=1 for a deploy that adds one)',
+    );
+    return;
+  }
   if (!process.env.DATABASE_URL) {
     // In development the API loads its own backend/.env, so this entry point
     // legitimately has no DATABASE_URL and migrations are run by hand.
@@ -362,9 +373,11 @@ async function main() {
   // reads it — the probe, the migration and the API all depend on
   // process.env.DATABASE_URL being final by this point.
   console.log('[server] ' + resolveDatabaseUrl());
-  // Report egress before migrating: P1001 alone cannot tell a blocked port
-  // from a bad host, and that distinction decides the fix.
-  await reportConnectivity(process.env.DATABASE_URL);
+  // There was an egress probe here. It proved that this sandbox blocks
+  // outbound database ports, which is why the app runs on the host's own
+  // MySQL — but it cost eight seconds of every boot waiting for a port that
+  // never answers, and the host only allows about ten before it gives up on a
+  // starting app. The finding outlived its usefulness; the delay did not.
   await runMigrations(root);
   console.log(`[server] migrations done (${rss()})`);
 
