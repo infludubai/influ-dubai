@@ -64,13 +64,18 @@ jobs:
             fs.writeFileSync('bundle/package.json', JSON.stringify({
               name: 'infludubai', version: '1.0.0', private: true,
               main: 'server.js',
-              // V8 sizes its heap from the machine, not the container, so a
-              // generous cap simply lets the peak grow until the container
-              // kills the process — which is what 192MB did here. The API
-              // settles at 83MB, so 112MB of old space is ample steady state
-              // while forcing collection during the one spike that matters:
-              // Nest instantiating its modules at boot.
-              scripts: { start: 'node --max-old-space-size=112 server.js' },
+              // The compact boot log finally showed where the host kills the
+              // process: during the require of the compiled app, silently — a
+              // SIGKILL, since the exit handlers print every other kind of
+              // death. That is the one moment allocation outruns collection,
+              // and a 112MB cap still let the transient peak overshoot the
+              // container. At 64MB V8 collects through the spike instead:
+              // peak drops from ~110MB to 86MB, boot is faster (4.6s), and a
+              // 30-request burst settles at 91MB.
+              scripts: {
+                start:
+                  'node --max-old-space-size=64 --max-semi-space-size=2 server.js',
+              },
               engines: { node: '>=20' }
             }, null, 2) + '\n');
           "
