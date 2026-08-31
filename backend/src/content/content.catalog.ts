@@ -29,6 +29,10 @@ export const CONTENT_PAGES = [
   { id: 'pricing', title: 'Pricing', description: 'Plan names, prices and what each plan includes.' },
   { id: 'about', title: 'About', description: 'Company story and values.' },
   { id: 'contact', title: 'Contact', description: 'Contact channels and response expectations.' },
+  {
+    id: 'emails', title: 'Emails',
+    description: 'The emails the platform sends. {{name}}, {{link}} and {{brandName}} are filled in per message.',
+  },
 ] as const;
 
 export const CONTENT_FIELDS: ContentField[] = [
@@ -208,6 +212,49 @@ export const CONTENT_FIELDS: ContentField[] = [
     default: 'Questions about campaigns, enterprise plans, verification or partnerships — we read everything that comes in.',
   },
   { key: 'contact.responseTime', label: 'Response time', page: 'contact', section: 'Header', type: 'text', default: 'Within one business day' },
+
+  // ── Emails ────────────────────────────────────────────────────────────────
+  // Defaults mirror what MailService used to hardcode. {{placeholders}} are
+  // substituted at send time; an emptied field falls back to its default.
+  {
+    key: 'email.approved.subject', label: 'Account approved — subject', page: 'emails', section: 'Account approved', type: 'text',
+    default: 'Your {{brandName}} account is approved',
+  },
+  {
+    key: 'email.approved.body', label: 'Account approved — body', page: 'emails', section: 'Account approved', type: 'textarea',
+    default: 'An administrator has approved your account. You can sign in and get started right away.',
+    help: 'Sent when you approve a pending account. Placeholders: {{name}}, {{brandName}}.',
+  },
+  {
+    key: 'email.approved.cta', label: 'Account approved — button', page: 'emails', section: 'Account approved', type: 'text',
+    default: 'Sign in',
+  },
+  {
+    key: 'email.passwordReset.subject', label: 'Password reset — subject', page: 'emails', section: 'Password reset', type: 'text',
+    default: 'Reset your {{brandName}} password',
+  },
+  {
+    key: 'email.passwordReset.body', label: 'Password reset — body', page: 'emails', section: 'Password reset', type: 'textarea',
+    default: "We received a request to reset your password. This link expires in 1 hour. If you didn't request it, you can safely ignore this email.",
+    help: 'Placeholders: {{name}}, {{brandName}}. The reset link becomes the button.',
+  },
+  {
+    key: 'email.passwordReset.cta', label: 'Password reset — button', page: 'emails', section: 'Password reset', type: 'text',
+    default: 'Reset password',
+  },
+  {
+    key: 'email.verification.subject', label: 'Email verification — subject', page: 'emails', section: 'Email verification', type: 'text',
+    default: 'Verify your {{brandName}} account',
+  },
+  {
+    key: 'email.verification.body', label: 'Email verification — body', page: 'emails', section: 'Email verification', type: 'textarea',
+    default: 'Thanks for signing up. Confirm your email address to activate your account and start using the platform.',
+    help: 'Only sent by legacy verification links — new signups skip this step.',
+  },
+  {
+    key: 'email.verification.cta', label: 'Email verification — button', page: 'emails', section: 'Email verification', type: 'text',
+    default: 'Verify email',
+  },
 ];
 
 const BY_KEY = new Map(CONTENT_FIELDS.map((f) => [f.key, f]));

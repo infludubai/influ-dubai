@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import type OpenAI from 'openai';
 import type Stripe from 'stripe';
 import { SettingsService } from './settings.service';
+import { MailService } from '../mail/mail.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { SettingGroupId } from './settings.catalog';
 
 export interface TestResult {
@@ -18,9 +20,13 @@ export interface TestResult {
 export class SettingsTester {
   private readonly logger = new Logger(SettingsTester.name);
 
-  constructor(private readonly settings: SettingsService) {}
+  constructor(
+    private readonly settings: SettingsService,
+    private readonly mail: MailService,
+    private readonly prisma: PrismaService,
+  ) {}
 
-  async test(group: SettingGroupId): Promise<TestResult> {
+  async test(group: SettingGroupId, callerId?: string): Promise<TestResult> {
     try {
       switch (group) {
         case 'openai':
@@ -28,7 +34,7 @@ export class SettingsTester {
         case 'stripe':
           return await this.testStripe();
         case 'smtp':
-          return this.testSmtp();
+          return this.testSmtp(callerId);
         default:
           return { ok: false, message: 'This section has nothing to test.' };
       }
@@ -82,9 +88,12 @@ export class SettingsTester {
     };
   }
 
-  private testSmtp(): TestResult {
+  private async testSmtp(callerId?: string): Promise<TestResult> {
     const host = this.settings.get('SMTP_HOST');
     const from = this.settings.get('MAIL_FROM');
+    if (this.settings.get('EMAIL_ENABLED')?.trim().toLowerCase() === 'off') {
+      return { ok: false, message: 'Sending is switched off. Set "Sending enabled" back to on first.' };
+    }
     if (!host) {
       return {
         ok: false,
@@ -94,9 +103,20 @@ export class SettingsTester {
     if (!from) {
       return { ok: false, message: 'Set a From address before sending mail.' };
     }
-    return {
-      ok: true,
-      message: `SMTP configured for ${host}. Trigger a password reset to send a real test message.`,
-    };
+
+    // Configuration says nothing about whether the provider will accept mail,
+    // so prove it: deliver a real message to the admin pressing the button.
+    const caller = callerId
+      ? await this.prisma.user.findUnique({ where: { id: callerId }, select: { email: true } })
+      : null;
+    if (!caller) {
+      return { ok: true, message: `SMTP configured for ${host}.` };
+    }
+    try {
+      await this.mail.sendTestEmail(caller.email);
+      return { ok: true, message: `Test email sent to ${caller.email} — check the inbox (and spam).` };
+    } catch (err) {
+      return { ok: false, message: `SMTP refused the message: ${(err as Error).message}` };
+    }
   }
 }

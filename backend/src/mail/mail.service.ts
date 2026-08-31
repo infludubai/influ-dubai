@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Transporter } from 'nodemailer';
 import { SettingsService } from '../settings/settings.service';
+import { ContentService } from '../content/content.service';
+import { CONTENT_FIELDS } from '../content/content.catalog';
 
 /**
  * Sends transactional email over SMTP when credentials are configured in
@@ -14,9 +16,18 @@ export class MailService {
   private transporter: Transporter | null = null;
   private transporterKey = '';
 
-  constructor(private readonly settings: SettingsService) {}
+  constructor(
+    private readonly settings: SettingsService,
+    private readonly content: ContentService,
+  ) {}
 
   private get transport(): Transporter | null {
+    // The explicit switch wins over configuration: "off" silences all email
+    // while keeping every SMTP credential in place for later.
+    const enabled = this.settings.get('EMAIL_ENABLED')?.trim().toLowerCase();
+    if (enabled === 'off' || enabled === 'false' || enabled === '0' || enabled === 'no') {
+      return null;
+    }
     const host = this.settings.get('SMTP_HOST');
     if (!host) {
       this.transporter = null;
@@ -51,25 +62,52 @@ export class MailService {
     );
   }
 
+  /**
+   * Resolves an admin-edited template with its shipped default underneath, and
+   * substitutes {{placeholders}}. An emptied field falls back to the default,
+   * so a template can never be saved into a blank email.
+   */
+  private tpl(
+    prefix: 'approved' | 'passwordReset' | 'verification',
+    vars: Record<string, string>,
+  ): { subject: string; body: string; cta: string } {
+    const overrides = this.content.getPublic();
+    const pick = (part: 'subject' | 'body' | 'cta') => {
+      const key = `email.${prefix}.${part}`;
+      const raw =
+        overrides[key]?.trim() ||
+        CONTENT_FIELDS.find((f) => f.key === key)?.default ||
+        '';
+      return raw.replace(/{{(w+)}}/g, (_, name) => vars[name] ?? '');
+    };
+    return { subject: pick('subject'), body: pick('body'), cta: pick('cta') };
+  }
+
+  private get brandName(): string {
+    return this.content.getPublic()['global.brandName'] ?? 'InfluDubai AI';
+  }
+
   async sendVerificationEmail(to: string, link: string) {
+    const t = this.tpl('verification', { brandName: this.brandName });
     await this.send({
       to,
-      subject: 'Verify your InfluDubai AI account',
+      subject: t.subject,
       heading: 'Confirm your email',
-      body: 'Thanks for signing up. Confirm your email address to activate your account and start using the platform.',
-      ctaLabel: 'Verify email',
+      body: t.body,
+      ctaLabel: t.cta,
       link,
       devLabel: 'Verify your email',
     });
   }
 
   async sendPasswordResetEmail(to: string, link: string) {
+    const t = this.tpl('passwordReset', { brandName: this.brandName });
     await this.send({
       to,
-      subject: 'Reset your InfluDubai AI password',
+      subject: t.subject,
       heading: 'Reset your password',
-      body: "We received a request to reset your password. This link expires in 1 hour. If you didn't request it, you can safely ignore this email.",
-      ctaLabel: 'Reset password',
+      body: t.body,
+      ctaLabel: t.cta,
       link,
       devLabel: 'Reset your password',
     });
@@ -77,14 +115,35 @@ export class MailService {
 
   /** Sent when an admin approves an account that was waiting in the queue. */
   async sendAccountApproved(to: string, displayName: string) {
+    const t = this.tpl('approved', { name: displayName, brandName: this.brandName });
     await this.send({
       to,
-      subject: 'Your InfluDubai AI account is approved',
+      subject: t.subject,
       heading: `Welcome${displayName ? ', ' + displayName : ''}!`,
-      body: 'An administrator has approved your account. You can sign in and get started right away.',
-      ctaLabel: 'Sign in',
+      body: t.body,
+      ctaLabel: t.cta,
       link: `${process.env.FRONTEND_URL ?? 'https://www.infludubai.ae'}/login`,
       devLabel: 'Account approved',
+    });
+  }
+
+  /**
+   * A real end-to-end test message, sent to the admin pressing the button in
+   * Admin → Settings → Email. Throws on failure so the tester can surface the
+   * SMTP error verbatim instead of a vague "something went wrong".
+   */
+  async sendTestEmail(to: string) {
+    const transport = this.transport;
+    if (!transport) {
+      throw new Error(
+        'Email is disabled or SMTP is not configured, so nothing was sent.',
+      );
+    }
+    await transport.sendMail({
+      from: this.from,
+      to,
+      subject: `${this.brandName} test email`,
+      text: 'This is a test message from Admin → Settings → Email. If you are reading it, SMTP is working.',
     });
   }
 

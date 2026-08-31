@@ -48,7 +48,7 @@ export class SettingsController {
   }
 
   @Post('test/:group')
-  test(@Param('group') group: string) {
-    return this.tester.test(group as SettingGroupId);
+  test(@Param('group') group: string, @CurrentUser() user: { id: string }) {
+    return this.tester.test(group as SettingGroupId, user.id);
   }
 }

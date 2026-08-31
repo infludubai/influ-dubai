@@ -114,6 +114,16 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
   },
 
   // ── SMTP ──────────────────────────────────────────────────────────────────
+  {
+    key: 'EMAIL_ENABLED',
+    label: 'Sending enabled',
+    group: 'smtp',
+    isSecret: false,
+    placeholder: 'on',
+    help:
+      'Set to "off" to silence every outgoing email without losing the SMTP ' +
+      'configuration below. Empty counts as on.',
+  },
   { key: 'SMTP_HOST', label: 'Host', group: 'smtp', isSecret: false, placeholder: 'smtp.resend.com' },
   { key: 'SMTP_PORT', label: 'Port', group: 'smtp', isSecret: false, placeholder: '587', numeric: true },
   { key: 'SMTP_USER', label: 'Username', group: 'smtp', isSecret: false, placeholder: 'resend' },
