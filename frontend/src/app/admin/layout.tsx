@@ -22,6 +22,7 @@ const NAV = [
   { href: "/admin/payouts", label: "Payouts", icon: Wallet },
   { href: "/admin/logs", label: "Audit Log", icon: FileText },
   { href: "/admin/content", label: "Website Content", icon: Pencil },
+  { href: "/admin/pricing", label: "Pricing", icon: DollarSign },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
