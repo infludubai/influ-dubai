@@ -127,24 +127,18 @@ function clearOrphanedFailedMigrations(root, expected) {
 }
 
 /**
- * Applies pending Prisma migrations, when asked to.
+ * Applies pending Prisma migrations at boot.
  *
- * This runs 'prisma migrate deploy', which is a separate Node process and
- * needs a few hundred megabytes of its own — more than this container has to
- * spare beside a running API. Left on by default it killed every boot: the
- * server itself sat at 54MB while the migration child pushed the container
- * over its limit, and the whole group was killed about ten seconds in.
- *
- * So it is opt-in. Set RUN_MIGRATIONS=1 for the one deploy that ships a new
- * migration, then remove it. The schema can also be applied from the hosting
- * panel's SQL import, which costs the running app nothing.
+ * This was briefly opt-in, blamed for boot deaths that turned out to be the
+ * Prisma client missing its musl engine — the migrate CLI itself ran fine on
+ * this host every time it was asked to, and with nothing pending it is a
+ * couple of seconds. Always-on means a deploy that ships a migration needs no
+ * hosting-panel step to go with it, which is worth far more than the seconds.
+ * SKIP_MIGRATIONS=1 remains as an escape hatch.
  */
 async function runMigrations(root) {
-  const wanted = /^(1|true|yes)$/i.test(process.env.RUN_MIGRATIONS ?? '');
-  if (!wanted) {
-    console.log(
-      '[server] skipping migrations (set RUN_MIGRATIONS=1 for a deploy that adds one)',
-    );
+  if (/^(1|true|yes)$/i.test(process.env.SKIP_MIGRATIONS ?? '')) {
+    console.log('[server] skipping migrations (SKIP_MIGRATIONS is set)');
     return;
   }
   if (!process.env.DATABASE_URL) {

@@ -29,6 +29,9 @@ enum RoleName {
 
 enum UserStatus {
   PENDING_VERIFICATION
+  /// Signed up while "require admin approval" was on; cannot log in until an
+  /// admin activates the account.
+  PENDING_APPROVAL
   ACTIVE
   SUSPENDED
 }
@@ -49,6 +52,9 @@ model User {
   /// Which brand account the user is currently acting as. Null falls back to
   /// the first one they own or belong to.
   activeBrandProfileId String? @map("active_brand_profile_id")
+  /// Admin-granted feature flags layered over the user's plan, e.g.
+  /// {"aiInsights": true}. Null means "plan defaults only".
+  featureOverrides Json? @map("feature_overrides")
   refreshTokens  RefreshToken[]
   emailVerificationTokens EmailVerificationToken[]
   passwordResetTokens     PasswordResetToken[]

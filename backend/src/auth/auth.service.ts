@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -10,6 +11,7 @@ import { ConfigService } from '@nestjs/config';
 import { WorkspacesService } from '../workspaces/workspaces.service';
 import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { SettingsService } from '../settings/settings.service';
 import { MailService } from '../mail/mail.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -34,6 +36,7 @@ export class AuthService {
     private readonly config: ConfigService,
     private readonly mail: MailService,
     private readonly workspaces: WorkspacesService,
+    private readonly settings: SettingsService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -42,21 +45,24 @@ export class AuthService {
       throw new ConflictException('An account with this email already exists.');
     }
 
-    const roleName = (await this.shouldBootstrapAsAdmin(dto.email))
-      ? 'ADMIN'
-      : dto.role;
+    const bootstrappedAdmin = await this.shouldBootstrapAsAdmin(dto.email);
+    const roleName = bootstrappedAdmin ? 'ADMIN' : dto.role;
     const role = await this.prisma.role.findUniqueOrThrow({ where: { name: roleName } });
     const passwordHash = await bcrypt.hash(dto.password, 10);
+
+    // No email-verification step — signup friction costs a marketplace more
+    // than unverified emails do. When the admin has turned on manual approval,
+    // new accounts wait in PENDING_APPROVAL instead; the bootstrap admin is
+    // exempt, or a fresh deployment could lock everyone out.
+    const requireApproval =
+      this.settings.isOn('REQUIRE_SIGNUP_APPROVAL') && !bootstrappedAdmin;
 
     const user = await this.prisma.user.create({
       data: {
         email: dto.email,
         passwordHash,
         roleId: role.id,
-        // Accounts are active immediately — no email-verification step.
-        // Signup friction costs a marketplace more than unverified emails do;
-        // the verify-email endpoint remains for any old links in flight.
-        status: 'ACTIVE',
+        status: requireApproval ? 'PENDING_APPROVAL' : 'ACTIVE',
         profile: { create: { displayName: dto.displayName } },
       },
       include: { profile: true, role: true },
@@ -105,6 +111,19 @@ export class AuthService {
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordValid) {
       throw new UnauthorizedException('Invalid email or password.');
+    }
+
+    // Checked after the password so these messages never leak whether an
+    // email is registered to someone probing the login form.
+    if (user.status === 'PENDING_APPROVAL') {
+      throw new ForbiddenException(
+        'Your account is awaiting admin approval. You will be able to sign in once it is approved.',
+      );
+    }
+    if (user.status === 'SUSPENDED') {
+      throw new ForbiddenException(
+        'This account has been suspended. Contact support if you believe this is a mistake.',
+      );
     }
 
     const tokens = await this.issueTokens(user.id, user.role.name);

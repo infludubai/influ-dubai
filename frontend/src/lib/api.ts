@@ -288,7 +288,7 @@ export interface PlatformSettingsResponse {
 export interface AuthUser {
   id: string;
   email: string;
-  status: "PENDING_VERIFICATION" | "ACTIVE" | "SUSPENDED";
+  status: "PENDING_VERIFICATION" | "PENDING_APPROVAL" | "ACTIVE" | "SUSPENDED";
   role: "CREATOR" | "BRAND" | "AGENCY" | "ADMIN";
   displayName: string | null;
 }
@@ -671,14 +671,20 @@ export const api = {
   adminGetStats: (accessToken: string) =>
     request<{ totalUsers: number; totalCreators: number; totalBrands: number; totalCampaigns: number; activeCampaigns: number; totalMessages: number; totalRevenueUsd: number }>('/admin/stats', { accessToken }),
 
-  adminListUsers: (accessToken: string, params?: { page?: number; limit?: number; role?: string; search?: string }) => {
+  adminListUsers: (accessToken: string, params?: { page?: number; limit?: number; role?: string; search?: string; status?: string }) => {
     const qs = new URLSearchParams();
     if (params) Object.entries(params).forEach(([k, v]) => { if (v !== undefined) qs.set(k, String(v)); });
-    return request<{ users: Array<{ id: string; email: string; status: string; createdAt: string; role: { name: string }; profile: { displayName: string; avatarUrl: string | null } | null }>; total: number; page: number; limit: number }>(`/admin/users?${qs}`, { accessToken });
+    return request<{ users: Array<{ id: string; email: string; status: string; createdAt: string; featureOverrides: Record<string, boolean> | null; role: { name: string }; profile: { displayName: string; avatarUrl: string | null } | null }>; total: number; page: number; limit: number }>(`/admin/users?${qs}`, { accessToken });
   },
 
   adminUpdateUserStatus: (accessToken: string, userId: string, status: string) =>
     request<unknown>(`/admin/users/${userId}/status`, { method: 'PATCH', body: JSON.stringify({ status }), accessToken }),
+
+  adminUpdateUserRole: (accessToken: string, userId: string, role: string) =>
+    request<unknown>(`/admin/users/${userId}/role`, { method: 'PATCH', body: JSON.stringify({ role }), accessToken }),
+
+  adminUpdateUserFeatures: (accessToken: string, userId: string, overrides: Record<string, boolean>) =>
+    request<{ id: string; featureOverrides: Record<string, boolean> | null }>(`/admin/users/${userId}/features`, { method: 'PATCH', body: JSON.stringify(overrides), accessToken }),
 
   adminDeleteUser: (accessToken: string, userId: string) =>
     request<unknown>(`/admin/users/${userId}`, { method: 'DELETE', accessToken }),

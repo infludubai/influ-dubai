@@ -34,6 +34,7 @@ function RegisterForm() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [showPw, setShowPw] = useState(false);
+  const [pendingApproval, setPendingApproval] = useState(false);
 
   const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -45,9 +46,15 @@ function RegisterForm() {
     setServerError(null);
     setSubmitting(true);
     try {
+      const created = await api.register(values);
+      if (created.status === "PENDING_APPROVAL") {
+        // The admin has manual approval turned on — there is no session to
+        // start yet, so explain the wait instead of a login that would fail.
+        setPendingApproval(true);
+        return;
+      }
       // Accounts are active immediately — sign the new user straight in and
       // land them in onboarding rather than a "check your email" dead end.
-      await api.register(values);
       const session = await api.login({ email: values.email, password: values.password });
       setSession(session);
       router.push("/onboarding");
@@ -57,6 +64,29 @@ function RegisterForm() {
       setSubmitting(false);
     }
   };
+
+  if (pendingApproval) {
+    return (
+      <AuthShell
+        title="Account created"
+        description="One more step before you can sign in."
+        footer={
+          <>
+            Questions?{" "}
+            <Link href="/contact" className="font-semibold text-primary hover:underline">Contact us</Link>
+          </>
+        }
+      >
+        <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 text-center">
+          <p className="font-semibold">Your account is awaiting approval</p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            An administrator reviews every new account. You&apos;ll receive an
+            email as soon as yours is approved, and can then sign in normally.
+          </p>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell

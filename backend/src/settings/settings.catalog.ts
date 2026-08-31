@@ -144,6 +144,16 @@ export const SETTING_DEFINITIONS: SettingDefinition[] = [
     placeholder: 'support@infludubai.com',
   },
   {
+    key: 'REQUIRE_SIGNUP_APPROVAL',
+    label: 'Require admin approval for new accounts',
+    group: 'platform',
+    isSecret: false,
+    placeholder: 'off',
+    help:
+      'Set to "on" and new signups cannot log in until you approve them in ' +
+      'Admin → Users. Existing accounts are unaffected.',
+  },
+  {
     key: 'PLATFORM_ANNOUNCEMENT',
     label: 'Dashboard announcement',
     group: 'platform',

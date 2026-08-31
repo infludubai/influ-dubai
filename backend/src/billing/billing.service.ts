@@ -128,7 +128,24 @@ export class BillingService {
   }
 
   async getSubscription(userId: string) {
-    return this.getOrCreateSubscription(userId);
+    const sub = await this.getOrCreateSubscription(userId);
+    // The plan says what the tier includes; overrides are what an admin has
+    // granted this user on top. Overrides only ever add, so the merge is a
+    // simple OR — clearing one returns the user to plan defaults.
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { featureOverrides: true },
+    });
+    const plan = PLANS[sub.plan as PlanKey] ?? PLANS.FREE;
+    const overrides = (user?.featureOverrides ?? {}) as Record<string, boolean>;
+    return {
+      ...sub,
+      effectiveFeatures: {
+        aiInsights: plan.aiInsights || overrides.aiInsights === true,
+        analytics: plan.analytics || overrides.analytics === true,
+        unlimitedCampaigns: plan.campaigns === -1 || overrides.unlimitedCampaigns === true,
+      },
+    };
   }
 
   // Create Stripe checkout session for upgrade

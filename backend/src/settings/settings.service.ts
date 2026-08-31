@@ -115,6 +115,12 @@ export class SettingsService implements OnModuleInit {
     return this.get(key) !== undefined;
   }
 
+  /** Reads a toggle. Admins type these by hand, so accept the usual spellings. */
+  isOn(key: string): boolean {
+    const raw = this.get(key)?.trim().toLowerCase();
+    return raw === 'on' || raw === 'true' || raw === 'yes' || raw === '1';
+  }
+
   private sourceOf(key: string): MaskedSetting['source'] {
     if (this.cache.get(key)?.trim()) return 'database';
     if (process.env[key]?.trim()) return 'environment';

@@ -75,6 +75,19 @@ export class MailService {
     });
   }
 
+  /** Sent when an admin approves an account that was waiting in the queue. */
+  async sendAccountApproved(to: string, displayName: string) {
+    await this.send({
+      to,
+      subject: 'Your InfluDubai AI account is approved',
+      heading: `Welcome${displayName ? ', ' + displayName : ''}!`,
+      body: 'An administrator has approved your account. You can sign in and get started right away.',
+      ctaLabel: 'Sign in',
+      link: `${process.env.FRONTEND_URL ?? 'https://www.infludubai.ae'}/login`,
+      devLabel: 'Account approved',
+    });
+  }
+
   /**
    * Support enquiry from the public contact form. `replyTo` is the enquirer,
    * so hitting reply in the support inbox goes to them rather than to us.

@@ -21,13 +21,27 @@ export class AdminController {
     @Query('limit') limit = '20',
     @Query('role') role?: string,
     @Query('search') search?: string,
+    @Query('status') status?: string,
   ) {
-    return this.admin.listUsers(+page, +limit, role, search);
+    return this.admin.listUsers(+page, +limit, role, search, status);
   }
 
   @Patch('users/:id/status')
   updateUserStatus(@Param('id') id: string, @Body('status') status: string) {
     return this.admin.updateUserStatus(id, status);
+  }
+
+  @Patch('users/:id/role')
+  updateUserRole(@Param('id') id: string, @Body('role') role: string) {
+    return this.admin.updateUserRole(id, role);
+  }
+
+  @Patch('users/:id/features')
+  updateUserFeatures(
+    @Param('id') id: string,
+    @Body() overrides: Record<string, unknown>,
+  ) {
+    return this.admin.updateUserFeatures(id, overrides);
   }
 
   @Delete('users/:id')
