@@ -232,6 +232,10 @@ async function mountWeb(root) {
   const { config } = require(path.join(dir, '.next', 'required-server-files.json'));
   process.env.__NEXT_PRIVATE_STANDALONE_CONFIG = JSON.stringify(config);
   process.env.NODE_ENV = 'production';
+  // Server components resolve their API base from this. In-process, the API
+  // shares the public listener, so point them at it rather than the default
+  // standalone port that nothing is listening on here.
+  process.env.INTERNAL_API_URL ??= `http://127.0.0.1:${PUBLIC_PORT}/api/v1`;
 
   const next = require(require.resolve('next', { paths: [dir] }));
   const app = next({ dev: false, dir, conf: config });

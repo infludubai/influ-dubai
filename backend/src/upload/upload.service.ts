@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 
-export type UploadBucket = 'avatars' | 'media-kits' | 'logos';
+export type UploadBucket = 'avatars' | 'media-kits' | 'logos' | 'content';
 
 /**
  * Stores uploads on the application's own disk.

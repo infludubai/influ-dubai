@@ -5,6 +5,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { api, type AdminContent, type ContentField } from "@/lib/api";
 import {
   Loader2, Save, RotateCcw, Check, AlertTriangle, ExternalLink, Pencil,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const PAGE_PREVIEW: Record<string, string> = {
@@ -14,6 +15,72 @@ const PAGE_PREVIEW: Record<string, string> = {
   about: "/about",
   contact: "/contact",
 };
+
+function ImageField({
+  field,
+  value,
+  onChange,
+}: {
+  field: ContentField;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const { accessToken } = useAuthStore();
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function pick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !accessToken) return;
+    setError(null);
+    setUploading(true);
+    try {
+      const { url } = await api.uploadFile(accessToken, file, "content");
+      onChange(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-start gap-4">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={value}
+            alt={field.label}
+            className="h-20 w-20 rounded-xl border object-cover"
+          />
+        ) : (
+          <div className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed text-[10px] text-muted-foreground">
+            No image
+          </div>
+        )}
+        <div className="flex flex-col gap-2">
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-medium transition-colors hover:bg-muted">
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+            {uploading ? "Uploading…" : value ? "Replace image" : "Upload image"}
+            <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={pick} disabled={uploading} />
+          </label>
+          {value && (
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="w-fit text-xs text-red-500 hover:underline"
+            >
+              Remove image
+            </button>
+          )}
+        </div>
+      </div>
+      {error && <p className="mt-1.5 text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
 
 function FieldEditor({
   field,
@@ -55,7 +122,9 @@ function FieldEditor({
       </div>
 
       <div className="min-w-0">
-        {field.type === "text" || field.type === "url" || field.type === "number" ? (
+        {field.type === "image" ? (
+          <ImageField field={field} value={value} onChange={onChange} />
+        ) : field.type === "text" || field.type === "url" || field.type === "number" ? (
           <input
             id={field.key}
             type={field.type === "number" ? "number" : "text"}

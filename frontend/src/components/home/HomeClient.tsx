@@ -214,9 +214,14 @@ export function HomeClient({ content }: { content: Record<string, string> }) {
       }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68 }}>
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none" }}>
+            {c("global.logoUrl") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={c("global.logoUrl")} alt={c("global.brandName")} style={{ width: 32, height: 32, borderRadius: 8, objectFit: "cover" }} />
+            ) : (
             <div style={{ width: 32, height: 32, borderRadius: 8, background: "linear-gradient(135deg,#7c3aed,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Sparkles size={16} color="#fff" strokeWidth={1.8} />
             </div>
+            )}
             <span className="header-wordmark" style={{ fontSize: 15, fontWeight: 700, color: scrolled ? "#09090b" : "#fff", letterSpacing: "-0.02em" }}>
               {c("global.brandName")}
             </span>
@@ -273,6 +278,13 @@ export function HomeClient({ content }: { content: Record<string, string> }) {
       {/* ═══════════ HERO ═══════════ */}
       <section style={{ background: "#08060f", minHeight: "100vh", display: "flex", alignItems: "center", position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
+          {c("home.hero.imageUrl") && (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={c("home.hero.imageUrl")} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ position: "absolute", inset: 0, background: "rgba(9,9,11,0.78)" }} />
+            </>
+          )}
           <div style={{ position: "absolute", top: "20%", left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle,rgba(124,58,237,0.28) 0%,transparent 70%)", filter: "blur(60px)" }} />
           <div style={{ position: "absolute", bottom: 0, right: "-5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle,rgba(79,70,229,0.18) 0%,transparent 70%)", filter: "blur(60px)" }} />
           <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: 0.035 }}>
@@ -301,12 +313,12 @@ export function HomeClient({ content }: { content: Record<string, string> }) {
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
-            <Link href="/register?role=BRAND" style={{ textDecoration: "none" }}>
+            <Link href={c("home.hero.primaryCtaHref", "/register?role=BRAND")} style={{ textDecoration: "none" }}>
               <button style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#7c3aed", color: "#fff", border: "none", borderRadius: 999, padding: "14px 36px", fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 20px rgba(124,58,237,0.45)" }}>
                 {c("home.hero.primaryCta")} <ArrowRight size={16} />
               </button>
             </Link>
-            <Link href="/marketplace" style={{ textDecoration: "none" }}>
+            <Link href={c("home.hero.secondaryCtaHref", "/marketplace")} style={{ textDecoration: "none" }}>
               <button style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 999, padding: "14px 36px", fontSize: 15, fontWeight: 600, cursor: "pointer", backdropFilter: "blur(8px)" }}>
                 {c("home.hero.secondaryCta")}
               </button>

@@ -9,7 +9,7 @@
  * per line with values separated by ` | ` in the order given by `columns`.
  */
 
-export type ContentType = 'text' | 'textarea' | 'number' | 'url' | 'list' | 'rows';
+export type ContentType = 'text' | 'textarea' | 'number' | 'url' | 'list' | 'rows' | 'image';
 
 export interface ContentField {
   key: string;
@@ -35,6 +35,10 @@ export const CONTENT_FIELDS: ContentField[] = [
   // ── Global ────────────────────────────────────────────────────────────────
   { key: 'global.brandName', label: 'Brand name', page: 'global', section: 'Brand', type: 'text', default: 'InfluDubai AI' },
   {
+    key: 'global.logoUrl', label: 'Logo', page: 'global', section: 'Brand', type: 'image', default: '',
+    help: 'Shown in the header and footer instead of the built-in mark. Square images look best. Leave empty to keep the default.',
+  },
+  {
     key: 'global.tagline', label: 'Tagline', page: 'global', section: 'Brand', type: 'text',
     default: 'Creator intelligence and influencer marketing built for the UAE and wider MENA market.',
   },
@@ -50,6 +54,11 @@ export const CONTENT_FIELDS: ContentField[] = [
     key: 'global.footerNote', label: 'Footer strapline', page: 'global', section: 'Footer', type: 'text',
     default: 'Built for UAE & MENA creators and brands.',
   },
+  {
+    key: 'global.socialLinks', label: 'Social links', page: 'global', section: 'Footer', type: 'rows',
+    columns: ['Label', 'URL'], default: '',
+    help: 'One per line, e.g. "Instagram | https://instagram.com/yourpage". Shown in the footer.',
+  },
 
   // ── Homepage ──────────────────────────────────────────────────────────────
   { key: 'home.hero.badge', label: 'Hero badge', page: 'home', section: 'Hero', type: 'text', default: 'AI-powered creator marketing' },
@@ -63,7 +72,19 @@ export const CONTENT_FIELDS: ContentField[] = [
       'Discover verified UAE and MENA creators, vet their audiences before you spend, and run every campaign from brief to payout in one place.',
   },
   { key: 'home.hero.primaryCta', label: 'Primary button', page: 'home', section: 'Hero', type: 'text', default: 'Start free' },
+  {
+    key: 'home.hero.primaryCtaHref', label: 'Primary button link', page: 'home', section: 'Hero', type: 'url',
+    default: '/register?role=BRAND', help: 'Where the primary button goes. Site paths like /register work, as do full URLs.',
+  },
   { key: 'home.hero.secondaryCta', label: 'Secondary button', page: 'home', section: 'Hero', type: 'text', default: 'Browse creators' },
+  {
+    key: 'home.hero.secondaryCtaHref', label: 'Secondary button link', page: 'home', section: 'Hero', type: 'url',
+    default: '/marketplace',
+  },
+  {
+    key: 'home.hero.imageUrl', label: 'Hero image', page: 'home', section: 'Hero', type: 'image', default: '',
+    help: 'Optional backdrop photo behind the hero. A dark overlay keeps the text readable. Leave empty for the default gradient.',
+  },
   {
     key: 'home.stats', label: 'Statistics', page: 'home', section: 'Statistics', type: 'rows',
     columns: ['Value', 'Label'],

@@ -8,7 +8,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ForbiddenException } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CurrentUser } from '../auth/current-user.decorator';
 import { UploadService } from './upload.service';
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -25,10 +27,17 @@ export class UploadController {
   async upload(
     @UploadedFile() file: Express.Multer.File,
     @Query('bucket') bucket: string,
+    @CurrentUser() user: { id: string; role: string },
   ) {
     if (!file) throw new BadRequestException('No file provided');
 
-    const validBuckets = ['avatars', 'media-kits', 'logos'];
+    // 'content' holds images embedded in the public website, so only admins
+    // may write to it — anything there is effectively published.
+    if (bucket === 'content' && user.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can upload website content images.');
+    }
+
+    const validBuckets = ['avatars', 'media-kits', 'logos', 'content'];
     if (!validBuckets.includes(bucket)) {
       throw new BadRequestException(`bucket must be one of: ${validBuckets.join(', ')}`);
     }
@@ -41,7 +50,7 @@ export class UploadController {
     const url = await this.uploads.uploadFile(
       file.buffer,
       file.originalname,
-      bucket as 'avatars' | 'media-kits' | 'logos',
+      bucket as 'avatars' | 'media-kits' | 'logos' | 'content',
     );
 
     return { url };

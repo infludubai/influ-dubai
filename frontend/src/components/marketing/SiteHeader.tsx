@@ -15,7 +15,7 @@ const LINKS = [
   { href: "/blog", label: "Blog" },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({ brandName, logoUrl }: { brandName?: string; logoUrl?: string } = {}) {
   const pathname = usePathname();
   const { user } = useAuthStore();
   const [open, setOpen] = useState(false);
@@ -41,12 +41,21 @@ export function SiteHeader() {
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-5">
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand shadow-md">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-base font-bold tracking-tight">
-            InfluDubai <span className="gradient-text">AI</span>
-          </span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={brandName ?? "InfluDubai AI"} className="h-8 w-8 rounded-xl object-cover shadow-md" />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand shadow-md">
+              <Sparkles className="h-4 w-4 text-white" />
+            </div>
+          )}
+          {brandName ? (
+            <span className="text-base font-bold tracking-tight">{brandName}</span>
+          ) : (
+            <span className="text-base font-bold tracking-tight">
+              InfluDubai <span className="gradient-text">AI</span>
+            </span>
+          )}
         </Link>
 
         <nav className="hidden flex-1 items-center gap-6 text-sm md:flex">

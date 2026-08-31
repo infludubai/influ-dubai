@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Sparkles, Mail, MapPin } from "lucide-react";
-import { getSiteContent } from "@/lib/content";
+import { Sparkles, Mail, MapPin, ExternalLink } from "lucide-react";
+import { getSiteContent, toRows } from "@/lib/content";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   {
@@ -55,9 +55,14 @@ export async function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
           <div>
             <Link href="/" className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand shadow-md">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
+              {c["global.logoUrl"] ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={c["global.logoUrl"]} alt={brand} className="h-8 w-8 rounded-xl object-cover shadow-md" />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl gradient-brand shadow-md">
+                  <Sparkles className="h-4 w-4 text-white" />
+                </div>
+              )}
               <span className="text-base font-bold tracking-tight">{brand}</span>
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
@@ -73,6 +78,17 @@ export async function SiteFooter() {
               >
                 <Mail className="h-3.5 w-3.5" /> {c["global.supportEmail"]}
               </a>
+              {toRows(c["global.socialLinks"], 2).map(([label, url]) => (
+                <a
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 transition-colors hover:text-foreground"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> {label}
+                </a>
+              ))}
             </div>
           </div>
 

@@ -218,7 +218,7 @@ export interface AdminPayouts {
   summary: { status: PayoutStatus; count: number; netUsd: number; feeUsd: number }[];
 }
 
-export type ContentType = "text" | "textarea" | "number" | "url" | "list" | "rows";
+export type ContentType = "text" | "textarea" | "number" | "url" | "list" | "rows" | "image";
 
 export interface ContentField {
   key: string;
@@ -668,6 +668,23 @@ export const api = {
   },
 
   // Admin
+  /**
+   * Multipart upload — bypasses request() because FormData must set its own
+   * Content-Type boundary. Returns the stored file's URL.
+   */
+  uploadFile: async (accessToken: string, file: File, bucket: string): Promise<{ url: string }> => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${API_URL}/upload?bucket=${encodeURIComponent(bucket)}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: form,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(body?.message ?? "Upload failed", res.status);
+    return body as { url: string };
+  },
+
   adminGetStats: (accessToken: string) =>
     request<{ totalUsers: number; totalCreators: number; totalBrands: number; totalCampaigns: number; activeCampaigns: number; totalMessages: number; totalRevenueUsd: number }>('/admin/stats', { accessToken }),
 
