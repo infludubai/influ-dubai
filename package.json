@@ -1,0 +1,12 @@
+{
+  "name": "infludubai",
+  "version": "1.0.0",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node --max-old-space-size=160 server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

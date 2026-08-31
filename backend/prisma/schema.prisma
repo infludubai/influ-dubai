@@ -1,0 +1,791 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  // "native" covers wherever the build runs; the musl target is the engine
+  // for the Alpine container the app is hosted in. Without it Prisma throws
+  // PrismaClientInitializationError at boot and the app restarts forever.
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2 — Core Platform Foundation
+// Tables: Users, Profiles, Roles, Permissions (+ auth support tables)
+// See docs/02-architecture.md for full schema rationale.
+// ---------------------------------------------------------------------------
+
+enum RoleName {
+  CREATOR
+  BRAND
+  AGENCY
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  /// Signed up while "require admin approval" was on; cannot log in until an
+  /// admin activates the account.
+  PENDING_APPROVAL
+  ACTIVE
+  SUSPENDED
+}
+
+model User {
+  id            String     @id @default(uuid())
+  email         String     @unique
+  passwordHash  String?    @map("password_hash")
+  status        UserStatus @default(PENDING_VERIFICATION)
+  roleId        String     @map("role_id")
+  role          Role       @relation(fields: [roleId], references: [id])
+  profile        Profile?
+  creatorProfile CreatorProfile?
+  /// An agency owns one brand account per client, so this is a list.
+  /// A plain BRAND user simply has exactly one.
+  brandProfiles  BrandProfile[]
+  workspaceMemberships WorkspaceMember[]
+  /// Which brand account the user is currently acting as. Null falls back to
+  /// the first one they own or belong to.
+  activeBrandProfileId String? @map("active_brand_profile_id")
+  /// Admin-granted feature flags layered over the user's plan, e.g.
+  /// {"aiInsights": true}. Null means "plan defaults only".
+  featureOverrides Json? @map("feature_overrides")
+  refreshTokens  RefreshToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String   @map("display_name")
+  bio         String?
+  country     String?
+  city        String?
+  languages   Json     @default("[]")
+  categories  Json     @default("[]")
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("profiles")
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        RoleName         @unique
+  description String?
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(uuid())
+  key         String           @unique // e.g. "campaign:create"
+  description String?
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// --- Auth support tables ----------------------------------------------------
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("refresh_tokens")
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique @map("token_hash")
+  expiresAt DateTime @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — Creator Profile System
+// ---------------------------------------------------------------------------
+
+enum SocialPlatform {
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  LINKEDIN
+  X
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+model CreatorProfile {
+  id                 String             @id @default(uuid())
+  userId             String             @unique @map("user_id")
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio                String?
+  location           String?
+  languages          Json               @default("[]")
+  categories         Json               @default("[]")
+  minRateUsd         Float?             @map("min_rate_usd")
+  maxRateUsd         Float?             @map("max_rate_usd")
+  totalAudienceSize  Int?               @map("total_audience_size")
+  mediaKitUrl        String?            @map("media_kit_url")
+  profileImageUrl    String?            @map("profile_image_url")
+  verificationStatus VerificationStatus @default(UNVERIFIED) @map("verification_status")
+  // Fraud detection fields
+  fraudRiskScore     Float?             @map("fraud_risk_score")      // 0-100 (higher = riskier)
+  fraudRiskLevel     String?            @map("fraud_risk_level")      // LOW | MEDIUM | HIGH
+  fraudFlags         Json               @default("[]") @map("fraud_flags")
+  fraudAnalyzedAt    DateTime?          @map("fraud_analyzed_at")
+  socialAccounts     SocialAccount[]
+  portfolioItems     PortfolioItem[]
+  invitations        CampaignInvitation[]
+  proposals          Proposal[]
+  fraudReports       FraudReport[]
+  deliverables       Deliverable[]
+  payouts            Payout[]
+  verificationRequests VerificationRequest[]
+  reviews            Review[]
+  shortlistedBy      Shortlist[]
+  /// Denormalised aggregates, recomputed whenever a review lands — keeps
+  /// marketplace listing queries from having to aggregate reviews per row.
+  ratingAvg          Float?             @map("rating_avg")
+  ratingCount        Int                @default(0) @map("rating_count")
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  @@map("creator_profiles")
+}
+
+model FraudReport {
+  id               String         @id @default(uuid())
+  creatorId        String         @map("creator_id")
+  creator          CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  riskScore        Float          @map("risk_score")
+  riskLevel        String         @map("risk_level")
+  flags            Json
+  engagementAnom   Float?         @map("engagement_anomaly")
+  followerAnom     Float?         @map("follower_anomaly")
+  summary          String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@map("fraud_reports")
+}
+
+model SocialAccount {
+  id             String         @id @default(uuid())
+  creatorId      String         @map("creator_id")
+  creator        CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  platform       SocialPlatform
+  handle         String
+  followersCount Int?           @map("followers_count")
+  engagementRate Float?         @map("engagement_rate")
+  profileUrl     String?        @map("profile_url")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  @@unique([creatorId, platform])
+  @@map("social_accounts")
+}
+
+model PortfolioItem {
+  id          String         @id @default(uuid())
+  creatorId   String         @map("creator_id")
+  creator     CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  mediaUrl    String?        @map("media_url")
+  linkUrl     String?        @map("link_url")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  @@map("portfolio_items")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 4 — Brand & Agency Workspace
+// ---------------------------------------------------------------------------
+
+enum CampaignType {
+  AWARENESS
+  ENGAGEMENT
+  LEAD_GENERATION
+  SALES
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model BrandProfile {
+  id          String     @id @default(uuid())
+  /// Owner. Not unique: an agency owns a separate brand account per client.
+  userId      String     @map("user_id")
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  members     WorkspaceMember[]
+  companyName String     @map("company_name")
+  industry    String?
+  website     String?
+  logoUrl     String?    @map("logo_url")
+  description String?
+  country     String?
+  campaigns   Campaign[]
+  payments    Payment[]
+  reviews     Review[]
+  shortlists  Shortlist[]
+  ratingAvg   Float?     @map("rating_avg")
+  ratingCount Int        @default(0) @map("rating_count")
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("brand_profiles")
+}
+
+model Campaign {
+  id              String         @id @default(uuid())
+  brandId         String         @map("brand_id")
+  brand           BrandProfile   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  type            CampaignType
+  status          CampaignStatus @default(DRAFT)
+  budgetUsd       Float          @map("budget_usd")
+  targetAudience  String?        @map("target_audience")
+  targetLocations Json           @default("[]") @map("target_locations")
+  targetCategories Json          @default("[]") @map("target_categories")
+  deadline        DateTime?
+  requirements    String?
+  invitations     CampaignInvitation[]
+  proposals       Proposal[]
+  metrics         CampaignMetric[]
+  deliverables    Deliverable[]
+  payments        Payment[]
+  payouts         Payout[]
+  reviews         Review[]
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  @@map("campaigns")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 8 — Analytics
+// ---------------------------------------------------------------------------
+
+model CampaignMetric {
+  id                  String   @id @default(uuid())
+  campaignId          String   @map("campaign_id")
+  campaign            Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  reach               Int      @default(0)
+  impressions         Int      @default(0)
+  engagement          Int      @default(0)
+  clicks              Int      @default(0)
+  conversions         Int      @default(0)
+  costPerEngagement   Float?   @map("cost_per_engagement")
+  roiEstimate         Float?   @map("roi_estimate")
+  recordedAt          DateTime @default(now()) @map("recorded_at")
+
+  @@map("campaign_metrics")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 7 — Campaign Collaboration System
+// ---------------------------------------------------------------------------
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+}
+
+model CampaignInvitation {
+  id          String           @id @default(uuid())
+  campaignId  String           @map("campaign_id")
+  campaign    Campaign         @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId   String           @map("creator_id")
+  creator     CreatorProfile   @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  status      InvitationStatus @default(PENDING)
+  message     String?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  @@unique([campaignId, creatorId])
+  @@map("campaign_invitations")
+}
+
+model Proposal {
+  id           String         @id @default(uuid())
+  campaignId   String         @map("campaign_id")
+  campaign     Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorId    String         @map("creator_id")
+  creator      CreatorProfile @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  coverLetter  String         @map("cover_letter")
+  proposedRate Float?         @map("proposed_rate")
+  status       ProposalStatus @default(PENDING)
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  @@unique([campaignId, creatorId])
+  @@map("proposals")
+}
+
+model Conversation {
+  id           String    @id @default(uuid())
+  participant1 String    @map("participant1_id")
+  participant2 String    @map("participant2_id")
+  messages     Message[]
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@unique([participant1, participant2])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String       @map("conversation_id")
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String       @map("sender_id")
+  content        String
+  readAt         DateTime?    @map("read_at")
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String
+  title     String
+  body      String
+  link      String?
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Phase 12 — Subscription & Monetization
+// ---------------------------------------------------------------------------
+
+enum PlanTier {
+  FREE
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  userId               String             @unique @map("user_id")
+  plan                 PlanTier           @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  stripeSubscriptionId String?            @map("stripe_subscription_id")
+  currentPeriodEnd     DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  invoices             Invoice[]
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  @@map("subscriptions")
+}
+
+model Invoice {
+  id               String       @id @default(uuid())
+  subscriptionId   String       @map("subscription_id")
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripeInvoiceId  String?      @unique @map("stripe_invoice_id")
+  amountUsd        Float        @map("amount_usd")
+  status           String       // paid | open | void
+  pdfUrl           String?      @map("pdf_url")
+  createdAt        DateTime     @default(now()) @map("created_at")
+
+  @@map("invoices")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  action    String
+  resource  String
+  resourceId String? @map("resource_id")
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
+
+/// Runtime-configurable platform settings, editable from Admin → Settings.
+/// Secret values (API keys) are stored AES-256-GCM encrypted; `isSecret`
+/// drives both encryption and masking in the admin API responses.
+model PlatformSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  isSecret    Boolean  @default(false) @map("is_secret")
+  updatedById String?  @map("updated_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}
+
+enum DeliverableStatus {
+  PENDING            // assigned to the creator, nothing submitted yet
+  SUBMITTED          // awaiting brand review
+  CHANGES_REQUESTED  // brand asked for a revision
+  APPROVED           // accepted; unlocks payout
+  CANCELLED
+}
+
+/// A single piece of contracted work within a campaign — one post, reel,
+/// story or video. This is the unit brands review and creators get paid for,
+/// so it carries the agreed rate rather than inheriting the campaign budget.
+model Deliverable {
+  id               String            @id @default(uuid())
+  campaignId       String            @map("campaign_id")
+  campaign         Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfileId String            @map("creator_profile_id")
+  creatorProfile   CreatorProfile    @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
+  title            String
+  description      String?
+  platform         SocialPlatform?
+  dueDate          DateTime?         @map("due_date")
+  agreedRateUsd    Float?            @map("agreed_rate_usd")
+
+  status           DeliverableStatus @default(PENDING)
+  submittedAt      DateTime?         @map("submitted_at")
+  approvedAt       DateTime?         @map("approved_at")
+
+  revisions        DeliverableRevision[]
+  payout           Payout?
+
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @updatedAt @map("updated_at")
+
+  @@index([campaignId])
+  @@index([creatorProfileId])
+  @@index([status])
+  @@map("deliverables")
+}
+
+/// One submit-and-review cycle. Kept as an append-only history so the full
+/// negotiation trail stays auditable rather than being overwritten in place.
+model DeliverableRevision {
+  id             String      @id @default(uuid())
+  deliverableId  String      @map("deliverable_id")
+  deliverable    Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+
+  /// Sequential per deliverable, starting at 1.
+  version        Int
+  contentUrl     String?     @map("content_url")   // live post/video URL
+  fileUrl        String?     @map("file_url")      // uploaded asset
+  note           String?                           // creator's submission note
+  submittedById  String      @map("submitted_by_id")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  /// Brand review of this revision — null until reviewed.
+  outcome        String?                           // APPROVED | CHANGES_REQUESTED
+  feedback       String?
+  reviewedById   String?     @map("reviewed_by_id")
+  reviewedAt     DateTime?   @map("reviewed_at")
+
+  @@unique([deliverableId, version])
+  @@index([deliverableId])
+  @@map("deliverable_revisions")
+}
+
+// ---------------------------------------------------------------------------
+// Payments & payouts
+// Money flows in two directions: brands fund campaigns (Payment), and
+// approved deliverables generate creator payouts net of the platform fee
+// (Payout). Amounts are stored in USD as the platform's settlement currency.
+// ---------------------------------------------------------------------------
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum PayoutStatus {
+  PENDING     // deliverable approved, awaiting release
+  PROCESSING  // transfer initiated
+  PAID
+  FAILED
+}
+
+enum PaymentMethod {
+  STRIPE
+  MANUAL      // bank transfer recorded by an admin
+  MOCK        // no payment provider configured
+}
+
+model Payment {
+  id                      String        @id @default(uuid())
+  campaignId              String        @map("campaign_id")
+  campaign                Campaign      @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  brandProfileId          String        @map("brand_profile_id")
+  brandProfile            BrandProfile  @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+
+  amountUsd               Float         @map("amount_usd")
+  status                  PaymentStatus @default(PENDING)
+  method                  PaymentMethod @default(MOCK)
+  description             String?
+
+  stripeCheckoutSessionId String?       @unique @map("stripe_checkout_session_id")
+  stripePaymentIntentId   String?       @unique @map("stripe_payment_intent_id")
+  paidAt                  DateTime?     @map("paid_at")
+
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
+
+  @@index([campaignId])
+  @@index([brandProfileId])
+  @@index([status])
+  @@map("payments")
+}
+
+model Payout {
+  id               String         @id @default(uuid())
+  /// One payout per deliverable — the unique constraint is what makes payout
+  /// creation idempotent if a deliverable is approved more than once.
+  deliverableId    String         @unique @map("deliverable_id")
+  deliverable      Deliverable    @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+  creatorProfileId String         @map("creator_profile_id")
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  campaignId       String         @map("campaign_id")
+  campaign         Campaign       @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  /// Fee percent is copied in at creation so historical payouts stay correct
+  /// when the platform rate changes later.
+  grossUsd         Float          @map("gross_usd")
+  feePercent       Float          @map("fee_percent")
+  feeUsd           Float          @map("fee_usd")
+  netUsd           Float          @map("net_usd")
+
+  status           PayoutStatus   @default(PENDING)
+  method           PaymentMethod  @default(MANUAL)
+  reference        String?        // bank reference or Stripe transfer id
+  failureReason    String?        @map("failure_reason")
+  paidAt           DateTime?      @map("paid_at")
+  releasedById     String?        @map("released_by_id")
+
+  createdAt        DateTime       @default(now()) @map("created_at")
+  updatedAt        DateTime       @updatedAt @map("updated_at")
+
+  @@index([creatorProfileId])
+  @@index([campaignId])
+  @@index([status])
+  @@map("payouts")
+}
+
+// ---------------------------------------------------------------------------
+// Trust layer: creator verification, two-way reviews, brand shortlists
+// ---------------------------------------------------------------------------
+
+/// Audit trail for verification decisions. CreatorProfile.verificationStatus
+/// holds the current state; this records who changed it and why.
+model VerificationRequest {
+  id               String             @id @default(uuid())
+  creatorProfileId String             @map("creator_profile_id")
+  creatorProfile   CreatorProfile     @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+
+  status           VerificationStatus @default(PENDING)
+  /// Creator's supporting evidence — insights screenshots, press links, etc.
+  evidenceUrl      String?            @map("evidence_url")
+  note             String?
+
+  reviewedById     String?            @map("reviewed_by_id")
+  reviewedAt       DateTime?          @map("reviewed_at")
+  decisionReason   String?            @map("decision_reason")
+
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  @@index([creatorProfileId])
+  @@index([status])
+  @@map("verification_requests")
+}
+
+enum ReviewDirection {
+  BRAND_TO_CREATOR
+  CREATOR_TO_BRAND
+}
+
+/// Post-campaign rating. Scoped to a campaign so both sides can only review
+/// after they have actually worked together, which is what makes the score
+/// meaningful rather than spammable.
+model Review {
+  id               String          @id @default(uuid())
+  campaignId       String          @map("campaign_id")
+  campaign         Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  creatorProfileId String          @map("creator_profile_id")
+  creatorProfile   CreatorProfile  @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  brandProfileId   String          @map("brand_profile_id")
+  brandProfile     BrandProfile    @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+
+  direction        ReviewDirection
+  authorUserId     String          @map("author_user_id")
+  rating           Int             // 1–5
+  comment          String?
+
+  createdAt        DateTime        @default(now()) @map("created_at")
+  updatedAt        DateTime        @updatedAt @map("updated_at")
+
+  /// One review per author per campaign per direction.
+  @@unique([campaignId, direction, authorUserId])
+  @@index([creatorProfileId])
+  @@index([brandProfileId])
+  @@map("reviews")
+}
+
+/// A brand's saved creators, optionally grouped by a free-text list name.
+model Shortlist {
+  id               String         @id @default(uuid())
+  brandProfileId   String         @map("brand_profile_id")
+  brandProfile     BrandProfile   @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+  creatorProfileId String         @map("creator_profile_id")
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id], onDelete: Cascade)
+  listName         String         @default("Saved") @map("list_name")
+  note             String?
+  createdAt        DateTime       @default(now()) @map("created_at")
+
+  @@unique([brandProfileId, creatorProfileId])
+  @@index([brandProfileId])
+  @@map("shortlists")
+}
+
+// ---------------------------------------------------------------------------
+// Agency workspaces & team seats
+//
+// A BrandProfile *is* the workspace: a direct brand has one, an agency owns
+// one per client. WorkspaceMember grants additional users access to it, which
+// is what turns a single-owner account into a team.
+// ---------------------------------------------------------------------------
+
+enum WorkspaceRole {
+  OWNER   // full control including billing and deleting the workspace
+  ADMIN   // manage campaigns, deliverables, members
+  MEMBER  // manage campaigns and deliverables
+  VIEWER  // read-only
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  REVOKED
+}
+
+model WorkspaceMember {
+  id             String           @id @default(uuid())
+  brandProfileId String           @map("brand_profile_id")
+  brandProfile   BrandProfile     @relation(fields: [brandProfileId], references: [id], onDelete: Cascade)
+
+  /// Null until an invited person signs up and the invite is claimed.
+  userId         String?          @map("user_id")
+  user           User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedEmail   String           @map("invited_email")
+
+  role           WorkspaceRole    @default(MEMBER)
+  status         MembershipStatus @default(INVITED)
+  invitedById    String?          @map("invited_by_id")
+  acceptedAt     DateTime?        @map("accepted_at")
+
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  /// One membership per person per workspace.
+  @@unique([brandProfileId, userId])
+  @@unique([brandProfileId, invitedEmail])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+/// Editable website copy, managed from Admin → Content.
+///
+/// Only keys present in the content catalog are honoured; anything else is
+/// ignored on read. A missing row means "use the built-in default", so the
+/// site always renders even with an empty table.
+model SiteContent {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String   @db.Text
+  updatedById String?  @map("updated_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("site_content")
+}
